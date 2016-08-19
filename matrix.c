@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 
 /* TODO: 
 
@@ -26,18 +27,98 @@ struct matrix
 
   /* the actual matrix. just an int for now. may code a library to deal with
      fixed point arithmetic.  */
-  int data[m][n]; 
+  int data[num_rows][num_cols]; 
 
 } matrix;
 
-/* Initializes a matrix to certain values */
-void init_matrix(struct matrix* A, int rows, int cols)
+/* checks to see if a matrix is valid 
+   (sensible row/column numbers and data not NULL).
+
+   IF NOT: prints error message and exits the entire program
+ */
+void is_valid(struct matrix* A)
 {
-  
+  if (A == NULL)
+    {
+      fprintf(stderr, "Error: data object NULL");
+      exit(0);
+    }
+
+  else if (A->num_rows <= 0)
+    {
+      fprintf(stderr, "Error: invalid number of rows");
+      exit(0)
+    }
+
+  else if (A->num_cols <= 0)
+    {
+      fprintf(stderr, "Error: invalid number of cols");
+      exit(0);
+    }
 
 }
 
-/* Sets two matrices equal */
+/* Initializes a matrix to 0 values */
+void init_matrix_zero(struct matrix* A, int rows, int cols)
+{
+ if (A == NULL)
+   {
+     fprintf(stderr, "Error: data object NULL");
+     exit(0);
+   }
+
+  // error checking
+  else if (rows <= 0)
+    {
+      fprintf(stderr, "Error: invalid number of rows");
+      exit(0)
+    }
+  else if (cols <= 0)
+    {
+      fprintf(stderr, "Error: invalid number of cols");
+      exit(0);
+    }
+
+  int i,j;
+  A->num_rows = rows;
+  B->num_cols = cols;
+
+  for(i = 0; i < rows; i++)
+    {
+      for(j = 0; j < cols-1; j+=2)
+	{
+	  // row major order + loop unrolling
+	  A->data[i][j + 1] = 0;
+	  A->data[i][j] = 0;
+	}
+    }
+}
+
+/* Initializes first matrix to the second matrix */
+void init_matrix_spec(struct matrix* A, struct matrix* B)
+{
+  if (A == NULL)
+    {
+      fprintf(stderr, "Error: First arg NULL");
+      exit(0);
+    }
+
+  is_valid(B);
+  
+  int i,j;
+  A->num_rows = rows;
+  B->num_cols = cols;
+
+  for(i = 0; i < rows; i++)
+    {
+      for(j = 0; j < cols-1; j+=2)
+	{
+	  A->data[i][j + 1] = B->data[i][j + 1];
+	  A->data[i][j] = B->data[i][j];
+	}
+    } 
+}
+
 
 /* Given two matrices in the order A and then B, checks to see if AB makes sense.
    Since this is a check function...code is so small makes sense to make it
@@ -91,18 +172,43 @@ matrix add_mats(struct matrix* A, struct matrix* B)
 
 }
 
+/* returns AB via O(n^3) naive matrix multiplication time */
 matrix naive_mat_mult(struct matrix* A, struct matrix* B)
 {
-  struct matrix result = 
 
+  /* valid input error checking */
+  is_valid(A);
+  is_valid(B);
+
+  if (!are_conformable(A,B))
+    {
+      fprintf(stderr, "Error: matrices to add are NOT comformable");
+      exit(0);
+    }
+  /* end valid input error checking */
+
+  struct matrix result = init_matrix(result, A->num_rows, B->num_cols);
+  int i,j;
+
+  /* bulk of function */
+  for (i = 0; i < result->num_rows; i++)
+    {
+      for(j = 0; j <  result->num_cols; j++)
+	{
+	  for (k = 0; k < A->num_cols; k++)
+	    {
+	      result->data[i][j] = A->data[i][k] * B->;
+	    }
+	}
+    }
+  
 }
 
 /* Multiplies two matrices together using the Strassen algorithm. */
 matrix strass_mat_mult(struct matrix* A, struct matrix* B)
 {
   
-
-
+  
 }
 
 
