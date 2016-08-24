@@ -2,11 +2,11 @@
    May consider later modification. Also contains size of the matrix. */
 typedef struct matrix
 {
-  int num_rows;
-  int num_cols;
+  int rows;
+  int cols;
 
   /* the actual matrix. just a float for now. */
-  float mat[m][n]; 
+  fp mat[m][n]; 
 
 } matrix;
 
@@ -17,13 +17,15 @@ bool are_conformable(matrix A, matrix B);
 matrix add_mats();
 
 /* Multiplies two matrices together using the Strassen algorithm. */
-matrix mult_mats();
+matrix* mult_mats(matrix* A, matrix* B);
+
+matrix* transpose(matrix* A);
 
 /* Inverts an invertible matrix. Should catch error appropriately if not invertible. */
-matrix 
+
 
 /* Given two matrices, concatenates them */
-matrix concatenate
+matrix concatenate(matrix* A, matrix* B);
 
 /* Given a matrix, returns its row-echelon form using gaussian elimination */
 matrix Gauss_Eliminate(matrix mat);
