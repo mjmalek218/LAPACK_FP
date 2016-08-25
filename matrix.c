@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include "fixed_point.h"
 
 /* TODO: 
 
@@ -32,7 +33,7 @@ struct matrix
 
   /* the actual matrix. just an int for now. may code a library to deal with
      fixed point arithmetic.  */
-  fp data[rows][cols]; 
+  fp data[][]; 
 
 } matrix;
 
@@ -86,6 +87,8 @@ void init_matrix_zero(struct matrix* A, unsigned int rows, unsigned int cols)
   unsigned int i,j;
   A->rows = rows;
   B->cols = cols;
+
+  
 
   for(i = 0; i < rows; i++)
     {
