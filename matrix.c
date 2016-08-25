@@ -12,6 +12,11 @@
    --Need to read chapter 5 and apply all basic optimizations
 
    --implement parallelized routines. This is critical for matrix computations.  
+
+   -- CREATE COMPANION LATEX FILE ANALYZING RUN-TIMES OF ALL ALGOS 
+
+   -- NEED TO GO THROUGH AND MAKE SURE OUTPUT IS PASSED AS A POINTER ARGUMENT
+   
 */
 
 /* This file will encode various matrix structs/operations, in 2D, which will ideally 
@@ -36,7 +41,7 @@ struct matrix
 
    IF NOT: prints error message and exits the entire program
  */
-void is_valid(struct matrix* A)
+void is_valid(const struct matrix* A)
 {
   if (A == NULL)
     {
@@ -55,11 +60,10 @@ void is_valid(struct matrix* A)
       fprintf(stderr, "Error: invalid number of cols");
       exit(0);
     }
-
 }
 
 /* Initializes a matrix to 0 values */
-void init_matrix_zero(struct matrix* A, int rows, int cols)
+void init_matrix_zero(struct matrix* A, unsigned int rows, unsigned int cols)
 {
  if (A == NULL)
    {
@@ -95,7 +99,7 @@ void init_matrix_zero(struct matrix* A, int rows, int cols)
 }
 
 /* Initializes first matrix to the second matrix */
-void init_matrix_spec(struct matrix* A, struct matrix* B)
+void init_matrix_spec(struct matrix* A, const struct matrix* B)
 {
   if (A == NULL)
     {
@@ -123,12 +127,12 @@ void init_matrix_spec(struct matrix* A, struct matrix* B)
 /* Given two matrices in the order A and then B, checks to see if AB makes sense.
    Since this is a check function...code is so small makes sense to make it
    inline. */
-inline bool are_conformable(struct matrix* A, struct matrix* B)
+inline bool are_conformable(const struct matrix* A, const struct matrix* B)
 {
   return (A->cols == B->rows);
 } 
 
-inline bool same_dim(struct matrix* A, struct matrix* B)
+inline bool same_dim(const struct matrix* A, const struct matrix* B)
 {
   return (A->cols == B->cols && A->rows == B->rows);
 }
@@ -140,7 +144,7 @@ inline bool same_dim(struct matrix* A, struct matrix* B)
    it has yet to be initialized */
 
 // TODO: OPTIMIZE THIS
-void transpose(matrix* result, matrix* A)
+void transpose(matrix* result, const matrix* A)
 {
   result = init_matrix_zero(result, A->cols, A->rows);
   unsigned int i,j;
@@ -156,7 +160,7 @@ void transpose(matrix* result, matrix* A)
 
 /* Adds two matrices together. Notice the sensitivity to row-major
    ordering of the matrix in main memory/caches */
-matrix* add_mats(struct matrix* A, struct matrix* B)
+void add_mats(struct matrix* sum, const struct matrix* A, const struct matrix* B)
 {
 
   /* First *need* to check to see if A and B are of same dim...
@@ -171,12 +175,10 @@ matrix* add_mats(struct matrix* A, struct matrix* B)
       exit(1);
     }
 
-  /* declare and initialize components of the return value */
-  struct matrix* sum;     
+  /* initialize components of the return value */
   sum->rows = m;
   sum->cols = n;
   
-
   /* row major order, with loop-unrolling.. computing two elements per cycle  */
   for (i = 0; i < m; i++)
     {
@@ -194,7 +196,7 @@ matrix* add_mats(struct matrix* A, struct matrix* B)
 }
 
 /* returns AB via O(n^3) naive matrix multiplication time */
-matrix* naive_mat_mult(struct matrix* A, struct matrix* B)
+void naive_mat_mult(struct matrix* result, const struct matrix* A, const struct matrix* B)
 {
 
   /* valid input error checking */
@@ -208,7 +210,7 @@ matrix* naive_mat_mult(struct matrix* A, struct matrix* B)
     }
   /* end valid input error checking */
 
-  struct matrix* result = init_matrix(result, A->rows, B->cols);
+  result = init_matrix(result, A->rows, B->cols);
   unsigned int i,j;
 
   /* bulk of function */
@@ -226,13 +228,13 @@ matrix* naive_mat_mult(struct matrix* A, struct matrix* B)
 }
 
 /* Multiplies two matrices together using the Strassen algorithm. */
-matrix strass_mat_mult(struct matrix* A, struct matrix* B)
+ void strass_mat_mult(struct matrix* result, const struct matrix* A, const struct matrix* B)
 {
   /* First step is to copy the matrices into  */  
 }
 
 /* Given two matrices, concatenates them row-wise */
-matrix* row_concatenate(matrix* A, matrix* B)
+void row_concat(struct matrix* result, const struct matrix* A, const struct matrix* B)
 {
   if (A->rows != B->rows)
     {
@@ -243,7 +245,6 @@ matrix* row_concatenate(matrix* A, matrix* B)
   unsigned int m = A->rows;
 
   /* if it works create an appropriate matrix and return */
-  struct matrix* result;
   unsigned int i,j;
 
   result->cols = A->cols + B->cols;
@@ -304,7 +305,7 @@ inline void row_add_mult(matrix* inp, unsigned int i, unsigned int j, fp s)
 }
 
 /* switches row i with row j*/
-inline void switch_row(matrix* inp, int i, int j)
+inline void switch_row(matrix* inp, unsigned int i, unsigned int j)
 {
   if (i >= inp->rows || j >= inp->rows)
     {
@@ -323,14 +324,81 @@ inline void switch_row(matrix* inp, int i, int j)
     }
 }
 
+/* Locates the first non-zero element in a column. 
+   If none is found...returns -1. Note there *could* be an error here if
+   the matrix column dimension is MAX_UNSIGNED_INT + 1 (make sure not to 
+   allocate such enormous matrices) */
+inline unsigned int 
+locate_nonzero_col(const struct matrix* inp, unsigned int col, unsigned int starting_row)
+ {
+
+   is_valid(inp);
+   unsigned int i = starting_row;
+
+   while(i < inp->rows)
+     {
+       // could have gotten rid of boolean operation but want clearer code 
+       if (inp->data[i][col] != 0)
+	 return i;
+       else
+	 i++;
+     }
+ 
+   return -1;
+   
+ }
+
 
 /* Given a matrix, returns its row-echelon form using gaussian elimination */
-matrix* Gauss_Eliminate(matrix mat)
+void Gauss_Eliminate(struct matrix* result, const struct matrix* mat)
 {
-  struct matrix* result = init_matrix(result, &mat);
-  
-  unsigned int curr_col = 0;
+ 
+  /* make sure result is NOT NULL */
+   if (A == NULL)
+   {
+     fprintf(stderr, "Error: data object NULL");
+     exit(0);
+   }
 
+  /* initialize it to the input matrix */
+  init(result, mat);
+
+  unsigned int curr_col = 0;
+  unsigned int curr_row = 0;
+  unsigned int i = 0;
+  unsigned int next_piv, j;
+
+  while (curr_col < result->cols)
+    {
+      /* First check for first non-zero pivot */
+      next_piv = locate_nonzero_col(result, curr_col, curr_row);
+      
+      if (next_piv == -1)
+	{
+	  curr_col++;
+	  continue;
+	}
+
+      /* otherwise if there is a non-zero element that is not this row...
+         switch it into this row */
+      else if (next_piv != curr_row)
+	{
+	  switch_row(result, curr_row, next_piv);
+	}  
+
+      /* By now we know we are dealing with a valid row */
+      if (result->data[curr_row][curr_col] != 1)
+	{
+	  row_mult(result, curr_row, div(1, result->data[curr_row][curr_col]));
+	}
+      
+      /* Now go throw and eliminate the remaining rows */
+      for (j = curr_row; j < result->rows; j++)
+	{
+	  if ()
+	}
+
+    }
 }
 
 /* Given a matrix, returns its reduced row-echelon form using gauss-jordan elimination */
