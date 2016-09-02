@@ -15,9 +15,9 @@ inline long fixed_to_reg(fp num);
 inline fp reg_to_fixed(long num);
 
 /* arithmetic. for subtraction just multiply by -1 to avoid confusion. */
-inline fp add(fp num1, fp num2);
-inline fp mult(fp num1, fp num2);
-inline fp div(fp num1, fp num2);
+inline fp fp_add(fp num1, fp num2);
+inline fp fp_mult(fp num1, fp num2);
+inline fp fp_div(fp num1, fp num2);
 
 
 

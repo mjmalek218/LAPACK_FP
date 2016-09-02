@@ -1,61 +1,89 @@
-/* Header class for all variable/function declarations for matrices. *//* Each matrix will be a matrix of floats, which should be more than enough precision. 
-   May consider later modification. Also contains size of the matrix. */
-typedef struct matrix
+#include <math.h> 
+#include <stdbool.h>
+#include <errno.h>
+#include <string.h>
+#include <stdio.h>
+#include <assert.h>
+#include "fixed_point.h"
+#include <stdlib.h>
+
+
+/* Each matrix will be a matrix of fixed point, of arbitrary precision. 
+   May consider later modification. Also contains size of the matrix.
+
+   Everything is to be allocated on the heap. */
+
+struct matrix
 {
-  int rows;
-  int cols;
+  size_t rows;
+  size_t cols;
 
-  /* the actual matrix. just a float for now. */
-  fp mat[m][n]; 
+  /* The actual matrix. */
+  fp* data; 
 
-} matrix;
+};
 
-/* Given two matrices in the order A and then B, checks to see if AB makes sense*/
-bool are_conformable(matrix A, matrix B); 
+/* checks to see if a matrix is valid 
+   (sensible row/column numbers, data not NULL, and matrix is correct size).
 
-/* Adds two matrices together */
-matrix add_mats();
+   IF NOT: prints error message and exits the entire program
+ */
+void is_valid(const struct matrix* A)
+{
+  if (A == NULL)
+    {
+      fprintf(stderr, "Error: data object NULL");
+      exit(0);
+    }
 
-/* Multiplies two matrices together using the Strassen algorithm. */
-matrix* mult_mats(matrix* A, matrix* B);
+  else if (A->rows == 0)
+    {
+      fprintf(stderr, "Error: invalid number of rows");
+      exit(0);
+    }
 
-matrix* transpose(matrix* A);
+  else if (A->cols == 0)
+    {
+      fprintf(stderr, "Error: invalid number of cols");
+      exit(0);
+    }
 
-/* Inverts an invertible matrix. Should catch error appropriately if not invertible. */
+  else if (A->data == NULL)
+    {
+      fprintf(stderr, "Error: data not initialized.");
+      exit(0);
+    }
+
+  else if (sizeof(A->data) != (A->rows * A->cols * sizeof(fp)))
+    {
+      fprintf(stderr, "Error: matrix not correct size.");
+      exit(0);
+    }
+}
+
+/* Allows easy access to a matrix using base-1 indexing. Make these get/set 
+   functions inline to speed up time considerably: they are likely to be 
+   deeply nested. No out of bounds checking: would be way too much overhead */
+inline fp get_elem(struct matrix* A, size_t row, size_t col)
+{
+  return A->data[(row - 1) * A->cols + (col - 1)];
+}
+
+inline void set_elem(struct matrix* A, size_t row, size_t col, fp new_elem)
+{
+  A->data[(row - 1) * A->cols + (col - 1)] = new_elem;
+}
+
+inline size_t get_rows(struct matrix* A)
+{
+  return A->rows;
+} 
+
+inline size_t get_cols(struct matrix* A)
+{
+  return A->cols;
+}
 
 
-/* Given two matrices, concatenates them */
-matrix concatenate(matrix* A, matrix* B);
-
-/* Given a matrix, returns its row-echelon form using gaussian elimination */
-matrix Gauss_Eliminate(matrix mat);
-
-/* Given a matrix, returns its reduced row-echelon form using gauss-jordan elimination */
-matrix Gauss_Jordan_Reduce(matrix mat);
-
-/* Given a matrix, returns its rank */
-int rank(matrix mat);
-
-/* Given a matrix, returns solutions to the corresponding homogenous system. */
-int solve_homog(matrix mat);
-
-/* Given a matrix M and an appropriate vector b (encoded as a matrix), returns the solution 
-   to Mx = b using a rudimentary method.  */
-int basic_solve(matrix M, matrix b);
-
-/* Computes the determinant of M */
-float det(matrix M);
-
-
-/* Returns true if nonsingular, false if singular */
-bool is_nonsingular(matrix M);
-
-/* on going issues with C:
-
-   --does not support function overloading on arguments
-   --does not support operator overloading
-   --no objects/classes (difficult to organize larger projects)
-*/
-
-
-
+/* Functions to be defined... */
+struct matrix* init_mat(size_t rows

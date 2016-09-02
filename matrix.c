@@ -1,22 +1,19 @@
-#include <math.h> 
-#include <stdbool.h>
-#include <errno.h>
-#include <string.h>
-#include <stdio.h>
-#include <assert.h>
-#include "fixed_point.h"
+#include "matrix.h"
 
 /* TODO: 
 
-   --Implement error checking with set jumps and long jumps
+   -- Implement error checking with set jumps and long jumps
 
-   --Need to read chapter 5 and apply all basic optimizations
+   -- Need to read chapter 5 and apply all basic optimizations
 
-   --implement parallelized routines. This is critical for matrix computations.  
+   -- implement parallelized routines. This is critical for matrix computations.  
 
    -- CREATE COMPANION LATEX FILE ANALYZING RUN-TIMES OF ALL ALGOS 
 
    -- NEED TO GO THROUGH AND MAKE SURE OUTPUT IS PASSED AS A POINTER ARGUMENT
+
+   -- one bug to be aware about is having a matrix of different dimension than 
+      that is stated. make sure to avoid this. 
    
 */
 
@@ -24,108 +21,80 @@
    be implemented using fast algorithms. The runtimes for each will be listed in the 
    comments. */
 
-/* Each matrix will be a matrix of floats, which should be more than enough precision. 
-   May consider later modification. Also contains size of the matrix. */
-struct matrix
+/* Allocates necessary heap memory. actual matrix memory is garbage. */
+struct matrix* init_mat(size_t rows, size_t cols)
 {
-  unsigned int rows;
-  unsigned int cols;
-
-  /* the actual matrix. just an int for now. may code a library to deal with
-     fixed point arithmetic.  */
-  fp data[][]; 
-
-} matrix;
-
-/* checks to see if a matrix is valid 
-   (sensible row/column numbers and data not NULL).
-
-   IF NOT: prints error message and exits the entire program
- */
-void is_valid(const struct matrix* A)
-{
-  if (A == NULL)
-    {
-      fprintf(stderr, "Error: data object NULL");
-      exit(0);
-    }
-
-  else if (A->rows <= 0)
-    {
-      fprintf(stderr, "Error: invalid number of rows");
-      exit(0)
-    }
-
-  else if (A->cols <= 0)
-    {
-      fprintf(stderr, "Error: invalid number of cols");
-      exit(0);
-    }
-}
-
-/* Initializes a matrix to 0 values */
-void init_matrix_zero(struct matrix* A, unsigned int rows, unsigned int cols)
-{
- if (A == NULL)
-   {
-     fprintf(stderr, "Error: data object NULL");
-     exit(0);
-   }
-
   // error checking
-  else if (rows == 0)
+  if (rows == 0)
     {
       fprintf(stderr, "Error: invalid number of rows");
-      exit(0)
+      exit(0);
     }
+
   else if (cols == 0)
     {
       fprintf(stderr, "Error: invalid number of cols");
       exit(0);
     }
 
-  unsigned int i,j;
-  A->rows = rows;
-  B->cols = cols;
+  struct matrix* A = malloc(sizeof(struct matrix));
 
-  
-
-  for(i = 0; i < rows; i++)
-    {
-      for(j = 0; j < cols-1; j+=2)
-	{
-	  // row major order + loop unrolling
-	  A->data[i][j + 1] = 0;
-	  A->data[i][j] = 0;
-	}
-    }
-}
-
-/* Initializes first matrix to the second matrix */
-void init_matrix_spec(struct matrix* A, const struct matrix* B)
-{
+  /* checks to see if the allocation worked */
   if (A == NULL)
     {
-      fprintf(stderr, "Error: First arg NULL");
+      fprintf(stderr, "Error: struct could not be allocated.");
       exit(0);
-    }
+    } 
 
-  is_valid(B);
-  
-  unsigned int i,j;
+  size_t i,j;
   A->rows = rows;
-  B->cols = cols;
+  A->cols = cols;
 
-  for(i = 0; i < rows; i++)
+  /* need to allocate the memory for the matrix */
+  A->data = (fp*) malloc(rows * cols * sizeof(fp));
+
+  /* again...need to check to see if the allocation worked */
+  if (A->data == NULL)
     {
-      for(j = 0; j < cols-1; j+=2)
+      fprintf(stderr, "Error: data array could not be allocated.");
+      exit(0);
+    }  
+
+  return A;
+}
+
+
+/* performs a deep copy of the given matrix and returns a pointer to new data */
+struct matrix* deep_copy(const struct matrix* B)
+{
+  is_valid(B);
+ 
+  struct matrix* A = malloc(sizeof(struct matrix));
+ 
+  size_t i,j;
+  A->rows = B->rows;
+  A->cols = B->cols;
+
+  A->data = (fp*) malloc(rows * cols * sizeof(fp));
+
+  for(i = 1; i != rows; i++)
+    {
+      for(j = 1; j != cols; j++)
 	{
-	  A->data[i][j + 1] = B->data[i][j + 1];
-	  A->data[i][j] = B->data[i][j];
+	  set_elem(A, i, j, get_elem(B, i, j));
 	}
     } 
 }
 
+void free_matrix(struct matrix* A)
+{
+  /* first free the data */
+  free(A->data);
+
+  /* then the struct itself */
+  free(A);
+
+}
 
 /* Given two matrices in the order A and then B, checks to see if AB makes sense.
    Since this is a check function...code is so small makes sense to make it
@@ -135,6 +104,7 @@ inline bool are_conformable(const struct matrix* A, const struct matrix* B)
   return (A->cols == B->rows);
 } 
 
+/* for addition or subtraction...or a host of other purposes */
 inline bool same_dim(const struct matrix* A, const struct matrix* B)
 {
   return (A->cols == B->cols && A->rows == B->rows);
@@ -145,76 +115,76 @@ inline bool same_dim(const struct matrix* A, const struct matrix* B)
    may be avoided. Once this is done...we swap in memory. Note
    we need to confirm that the input matrix is NULL so far...as in
    it has yet to be initialized */
-
-// TODO: OPTIMIZE THIS
-void transpose(matrix* result, const matrix* A)
+struct matrix* transpose(const matrix* A)
 {
-  result = init_matrix_zero(result, A->cols, A->rows);
-  unsigned int i,j;
+  struct matrix* result = init_matrix(A->cols, A->rows);
+  size_t i,j;
 
   /* we swap indices. note this suffers from poor
-     locality but it seems as though every approach will tbh */
+     locality but it seems as though every 'easy' approach will tbh */
   for (i = 0; i < A->rows; i++)
     {
-      for (j = 0; j < A->cols; j++
-      result->data[j][i] = A->data[i][j];	
+      for (j = 0; j < A->cols; j++)
+	result->data[j * result->cols + i] = A->data[i * A->cols + j];	
     }
+
+  return result;
 }
 
-/* Adds two matrices together. Notice the sensitivity to row-major
+/* Returns the sum of two matrices. Notice the sensitivity to row-major
    ordering of the matrix in main memory/caches */
-void add_mats(struct matrix* sum, const struct matrix* A, const struct matrix* B)
+struct matrix* add_mats(const struct matrix* A, const struct matrix* B)
 {
 
   /* First *need* to check to see if A and B are of same dim...
      and sensible. This involves error-catching.  */
-  unsigned int i,j;
-  unsigned int m = A->rows;
-  unsigned int n = A->cols;
 
   if (!same_dim(A,B))
     {
-      fprintf(stderr, "Error: matrices to add are NOT comformable");
+      fprintf(stderr, "Error: matrices to add are NOT the same dimension");
       exit(1);
     }
+
+  size_t i,j;
+  size_t m = A->rows;
+  size_t n = A->cols;
+
+ struct matrix* sum = init_matrix(m,n);
 
   /* initialize components of the return value */
   sum->rows = m;
   sum->cols = n;
   
-  /* row major order, with loop-unrolling.. computing two elements per cycle  */
+  /* row major order */
   for (i = 0; i < m; i++)
     {
       /* Unrolling the column operations is all that makes sense...otherwise
          locality in the cache will be disrupted. */
       for (j = 0; j < n-1; j+=2)
 	{
-	  sum->data[i][j] = A->data[i][j] + B->data[i][j];
-	  sum->data[i][j+1] = A->data[i][j+1] + B->data[i][j+1]; 
+	  sum->data[i * n + j] = fp_add(A->data[i * n + j], B->data[i * n + j]);
 	}
     }
     
   return result;
-
 }
 
 /* returns AB via O(n^3) naive matrix multiplication time */
 void naive_mat_mult(struct matrix* result, const struct matrix* A, const struct matrix* B)
 {
-
   /* valid input error checking */
   is_valid(A);
   is_valid(B);
 
   if (!are_conformable(A,B))
     {
-      fprintf(stderr, "Error: matrices to add are NOT comformable");
+      fprintf(stderr, "Error: matrices to multiply are NOT comformable");
       exit(0);
     }
   /* end valid input error checking */
 
-  result = init_matrix(result, A->rows, B->cols);
-  unsigned int i,j;
+  result = init_matrix_zero(result, A->rows, B->cols);
+  size_t i,j;
 
   /* bulk of function */
   for (i = 0; i < result->rows; i++)
@@ -223,7 +193,8 @@ void naive_mat_mult(struct matrix* result, const struct matrix* A, const struct 
 	{
 	  for (k = 0; k < A->cols; k++)
 	    {
-	      result->data[i][j] = mult(A->data[i][k], B->data[k][j]);
+	      result->data[i * result->cols + j] = 
+		fp_mult(A->data[i * A->cols + k], B->data[k * B->cols + j]);
 	    }
 	}
     }
@@ -231,13 +202,13 @@ void naive_mat_mult(struct matrix* result, const struct matrix* A, const struct 
 }
 
 /* Multiplies two matrices together using the Strassen algorithm. */
- void strass_mat_mult(struct matrix* result, const struct matrix* A, const struct matrix* B)
+void strass_mat_mult(struct matrix* result, const struct matrix* A, const struct matrix* B)
 {
   /* First step is to copy the matrices into  */  
 }
 
-/* Given two matrices, concatenates them row-wise */
-void row_concat(struct matrix* result, const struct matrix* A, const struct matrix* B)
+/* Given two matrices, returns their row-wise concatenation */
+struct matrix* row_concat(struct matrix* result, const struct matrix* A, const struct matrix* B)
 {
   if (A->rows != B->rows)
     {
@@ -245,27 +216,23 @@ void row_concat(struct matrix* result, const struct matrix* A, const struct matr
       exit(0);
     }
 
-  unsigned int m = A->rows;
+  struct matrix* result = init_matrix(A->rows, A->cols + B->cols);
 
-  /* if it works create an appropriate matrix and return */
-  unsigned int i,j;
+  size_t i,j;
 
-  result->cols = A->cols + B->cols;
-  result->rows = m;
-
-  for (i = 0; i < m; i++)
+  for (i = 0; i < A->rows; i++)
     {
     for (j = 0; j < A->cols; j++)
       {
-	result->data[i][j] = A->data[i][j];
+	result->data[i * result->cols + j] = A->data[i * A->cols + j];
       }
     }
 
-  for (i = 0; i < m; i++)
+  for (i = 0; i < B->rows; i++)
     {
       for(j = A->cols; j < A->cols + B->cols; j++)
 	{
-	  result->data[i][j] = B->data[i][j - A->cols];
+	  result->data[i * result->cols + j] = B->data[i * B->cols + j - A->cols];
 	}
     }
 
@@ -273,7 +240,7 @@ void row_concat(struct matrix* result, const struct matrix* A, const struct matr
 }
 
 /* returns the input matrix but with the ith row multiplied by s */
-inline void row_mult(matrix* inp, unsigned int i, fp s)
+inline void row_mult(matrix* inp, size_t i, fp s)
 {
   if (i >= inp->rows)
     {
@@ -281,17 +248,17 @@ inline void row_mult(matrix* inp, unsigned int i, fp s)
       exit(0);
     }
 
-  unsigned int k;
+  size_t k;
 
   for (k = 0; k < inp->cols; inp++)
     {
-      inp->data[i][k] *= s;
+      inp->data[i * inp->cols + k] *= s;
     }
 }
 
 
 /* adds s*row_i to row_j */
-inline void row_add_mult(matrix* inp, unsigned int i, unsigned int j, fp s)
+inline void row_add_mult(matrix* inp, size_t i, size_t j, fp s)
 {
   if (i >= inp->rows || j >= inp->rows)
     {
@@ -299,16 +266,16 @@ inline void row_add_mult(matrix* inp, unsigned int i, unsigned int j, fp s)
       exit(0);
     }
 
-  unsigned int k;
+  size_t k;
 
   for (k = 0; k < inp->cols; inp++)
     {
-      inp->data[j][k] += s * inp->data[i][k];
+      inp->data[j * inp->cols + k] += s * inp->data[i * inp->cols + k];
     }
 }
 
 /* switches row i with row j*/
-inline void switch_row(matrix* inp, unsigned int i, unsigned int j)
+inline void switch_row(matrix* inp, size_t i, size_t j)
 {
   if (i >= inp->rows || j >= inp->rows)
     {
@@ -316,14 +283,14 @@ inline void switch_row(matrix* inp, unsigned int i, unsigned int j)
       exit(0);
     }
 
-  unsigned int k;
+  size_t k;
   fp temp;
 
   for (k = 0; k < inp->cols; inp++)
     {
-      temp = inp->data[j][k];
-      inp->data[j][k] = inp->data[i][k];
-      inp->data[i][k] = temp;
+      temp = inp->data[j * inp->cols + k];
+      inp->data[j * inp->cols + k] = inp->data[i * inp->cols + k];
+      inp->data[i * inp->cols + k] = temp;
     }
 }
 
@@ -331,12 +298,12 @@ inline void switch_row(matrix* inp, unsigned int i, unsigned int j)
    If none is found...returns -1. Note there *could* be an error here if
    the matrix column dimension is MAX_UNSIGNED_INT + 1 (make sure not to 
    allocate such enormous matrices) */
-inline unsigned int 
-locate_nonzero_col(const struct matrix* inp, unsigned int col, unsigned int starting_row)
+inline size_t 
+locate_nonzero_col(const struct matrix* inp, size_t col, size_t starting_row)
  {
 
    is_valid(inp);
-   unsigned int i = starting_row;
+   size_t i = starting_row;
 
    while(i < inp->rows)
      {
@@ -352,57 +319,57 @@ locate_nonzero_col(const struct matrix* inp, unsigned int col, unsigned int star
  }
 
 
-/* Given a matrix, returns its row-echelon form using gaussian elimination */
-void Gauss_Eliminate(struct matrix* result, const struct matrix* mat)
-{
+/* /\* Given a matrix, returns its row-echelon form using gaussian elimination *\/ */
+/* void Gauss_Eliminate(struct matrix* result, const struct matrix* mat) */
+/* { */
  
-  /* make sure result is NOT NULL */
-   if (A == NULL)
-   {
-     fprintf(stderr, "Error: data object NULL");
-     exit(0);
-   }
+/*   /\* make sure result is NOT NULL *\/ */
+/*    if (A == NULL) */
+/*    { */
+/*      fprintf(stderr, "Error: data object NULL"); */
+/*      exit(0); */
+/*    } */
 
-  /* initialize it to the input matrix */
-  init(result, mat);
+/*   /\* initialize it to the input matrix *\/ */
+/*   init(result, mat); */
 
-  unsigned int curr_col = 0;
-  unsigned int curr_row = 0;
-  unsigned int i = 0;
-  unsigned int next_piv, j;
+/*   size_t curr_col = 0; */
+/*   size_t curr_row = 0; */
+/*   size_t i = 0; */
+/*   size_t next_piv, j; */
 
-  while (curr_col < result->cols)
-    {
-      /* First check for first non-zero pivot */
-      next_piv = locate_nonzero_col(result, curr_col, curr_row);
+/*   while (curr_col < result->cols) */
+/*     { */
+/*       /\* First check for first non-zero pivot *\/ */
+/*       next_piv = locate_nonzero_col(result, curr_col, curr_row); */
       
-      if (next_piv == -1)
-	{
-	  curr_col++;
-	  continue;
-	}
+/*       if (next_piv == -1) */
+/* 	{ */
+/* 	  curr_col++; */
+/* 	  continue; */
+/* 	} */
 
-      /* otherwise if there is a non-zero element that is not this row...
-         switch it into this row */
-      else if (next_piv != curr_row)
-	{
-	  switch_row(result, curr_row, next_piv);
-	}  
+/*       /\* otherwise if there is a non-zero element that is not this row... */
+/*          switch it into this row *\/ */
+/*       else if (next_piv != curr_row) */
+/* 	{ */
+/* 	  switch_row(result, curr_row, next_piv); */
+/* 	}   */
 
-      /* By now we know we are dealing with a valid row */
-      if (result->data[curr_row][curr_col] != 1)
-	{
-	  row_mult(result, curr_row, div(1, result->data[curr_row][curr_col]));
-	}
+/*       /\* By now we know we are dealing with a valid row *\/ */
+/*       if (result->data[curr_row][curr_col] != 1) */
+/* 	{ */
+/* 	  row_mult(result, curr_row, fp_div(1, result->data[curr_row][curr_col])); */
+/* 	} */
       
-      /* Now go throw and eliminate the remaining rows */
-      for (j = curr_row; j < result->rows; j++)
-	{
-	  if ()
-	}
+/*       /\* Now go throw and eliminate the remaining rows *\/ */
+/*       for (j = curr_row; j < result->rows; j++) */
+/* 	{ */
+/* 	  if () */
+/* 	} */
 
-    }
-}
+/*     } */
+/* } */
 
 /* Given a matrix, returns its reduced row-echelon form using gauss-jordan elimination */
 matrix Gauss_Jordan_Reduce(matrix mat);

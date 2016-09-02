@@ -1,4 +1,4 @@
-#include fixed_point.h
+\#include fp.h
 
 /* Note that none of these functions return any overflow yet */
 
@@ -14,20 +14,20 @@ inline fp reg_to_fixed(long num)
   return num << num_shift;
 }
 
-inline fp fp_add(fp num1, fp num2)
+inline fp add(fp num1, fp num2)
 {
   /* just add...pretty easy */
   return num1 + num2;
 }
 
-inline fp fp_mult(fp num1, fp num2)
+inline fp mult(fp num1, fp num2)
 {
   return (num1 * num2) >> num_shift;
 }
 
 
 // returns (first argument) / (second argument)
-inline fp fp_div(fp num1, fp num2)
+inline fp div(fp num1, fp num2)
 {
   return ((num1 << num_shift) / num2);
 }

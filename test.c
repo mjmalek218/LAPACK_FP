@@ -26,12 +26,14 @@ void print_matrix(struct matrix* A)
   printf("\n");
 }
 
-
+/* need to free all the test data */
 int main()
 {
-  struct matrix* mat = init_matrix_zero(mat, 5, 5);
+  struct matrix* mat = init_matrix(mat, 5, 5);
 
   print_matrix(mat);
+
+  free(mat); 
 }
 
 
