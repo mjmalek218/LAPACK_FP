@@ -14,11 +14,11 @@ void print_matrix(struct matrix* A)
 
   printf("\n\n");
 
-  for (i = 0; i < A->rows; i++)
+  for (i = 1; i <= get_rows(A); i++)
     {
-      for (j = 0; j < A->cols; j++)
+      for (j = 0; j <= get_cols(A); j++)
 	{
-	  printf(".2% ", A->data[i][j]);
+	  printf(".2% ", get_elem(A, i, j));
 	}
       printf("\n");
     }
@@ -29,7 +29,7 @@ void print_matrix(struct matrix* A)
 /* need to free all the test data */
 int main()
 {
-  struct matrix* mat = init_matrix(mat, 5, 5);
+  struct matrix* mat = init_matrix(5, 5);
 
   print_matrix(mat);
 

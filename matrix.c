@@ -22,7 +22,7 @@
    comments. */
 
 /* Allocates necessary heap memory. actual matrix memory is garbage. */
-struct matrix* init_mat(size_t rows, size_t cols)
+struct matrix* init_matrix(size_t rows, size_t cols)
 {
   // error checking
   if (rows == 0)
@@ -47,8 +47,8 @@ struct matrix* init_mat(size_t rows, size_t cols)
     } 
 
   size_t i,j;
-  A->rows = rows;
-  A->cols = cols;
+  set_rows(A, rows);
+  set_cols(A, cols);
 
   /* need to allocate the memory for the matrix */
   A->data = (fp*) malloc(rows * cols * sizeof(fp));
@@ -72,14 +72,14 @@ struct matrix* deep_copy(const struct matrix* B)
   struct matrix* A = malloc(sizeof(struct matrix));
  
   size_t i,j;
-  A->rows = B->rows;
-  A->cols = B->cols;
+  set_rows(A, get_rows(B));
+  set_cols(A, get_cols(B));
 
   A->data = (fp*) malloc(rows * cols * sizeof(fp));
 
-  for(i = 1; i != rows; i++)
+  for(i = 1; i <= get_rows(B); i++)
     {
-      for(j = 1; j != cols; j++)
+      for(j = 1; j <= get_cols(B); j++)
 	{
 	  set_elem(A, i, j, get_elem(B, i, j));
 	}
@@ -101,7 +101,7 @@ void free_matrix(struct matrix* A)
    inline. */
 inline bool are_conformable(const struct matrix* A, const struct matrix* B)
 {
-  return (A->cols == B->rows);
+  return (get_cols(A) == get_rows(B));
 } 
 
 /* for addition or subtraction...or a host of other purposes */
@@ -117,15 +117,19 @@ inline bool same_dim(const struct matrix* A, const struct matrix* B)
    it has yet to be initialized */
 struct matrix* transpose(const matrix* A)
 {
-  struct matrix* result = init_matrix(A->cols, A->rows);
+  is_valid(A);
+
+  struct matrix* result = init_matrix(get_cols(A), get_rows(A));
   size_t i,j;
 
   /* we swap indices. note this suffers from poor
      locality but it seems as though every 'easy' approach will tbh */
-  for (i = 0; i < A->rows; i++)
+  for (i = 1; i <= get_rows(A); i++)
     {
-      for (j = 0; j < A->cols; j++)
-	result->data[j * result->cols + i] = A->data[i * A->cols + j];	
+      for (j = 1; j <= get_cols(A); j++)
+	{
+	  set_elem(result, j, i,  get_elem(A, i, j));	
+	}
     }
 
   return result;
@@ -138,31 +142,33 @@ struct matrix* add_mats(const struct matrix* A, const struct matrix* B)
 
   /* First *need* to check to see if A and B are of same dim...
      and sensible. This involves error-catching.  */
+  is_valid(A);
+  is_valid(B);
 
   if (!same_dim(A,B))
     {
       fprintf(stderr, "Error: matrices to add are NOT the same dimension");
-      exit(1);
+      exit(0);
     }
 
   size_t i,j;
-  size_t m = A->rows;
-  size_t n = A->cols;
+  size_t m = get_rows(A);
+  size_t n = get_cols(A);
 
- struct matrix* sum = init_matrix(m,n);
+  struct matrix* sum = init_matrix(m,n);
 
   /* initialize components of the return value */
-  sum->rows = m;
-  sum->cols = n;
+  set_rows(sum, m);
+  set_cols(sum, n);
   
   /* row major order */
-  for (i = 0; i < m; i++)
+  for (i = 1; i <= m; i++)
     {
       /* Unrolling the column operations is all that makes sense...otherwise
          locality in the cache will be disrupted. */
-      for (j = 0; j < n-1; j+=2)
+      for (j = 1; j <= n; j++)
 	{
-	  sum->data[i * n + j] = fp_add(A->data[i * n + j], B->data[i * n + j]);
+	  set_elem(sum, i, j, fp_add(get_elem(A, i, j), get_elem(B, i, j)));
 	}
     }
     
@@ -170,7 +176,7 @@ struct matrix* add_mats(const struct matrix* A, const struct matrix* B)
 }
 
 /* returns AB via O(n^3) naive matrix multiplication time */
-void naive_mat_mult(struct matrix* result, const struct matrix* A, const struct matrix* B)
+void naive_mat_mult(const struct matrix* A, const struct matrix* B)
 {
   /* valid input error checking */
   is_valid(A);
@@ -181,21 +187,25 @@ void naive_mat_mult(struct matrix* result, const struct matrix* A, const struct 
       fprintf(stderr, "Error: matrices to multiply are NOT comformable");
       exit(0);
     }
-  /* end valid input error checking */
 
-  result = init_matrix_zero(result, A->rows, B->cols);
+  /* end valid input error checking */
+  struct matrix* product = init_matrix(get_rows(A), get_cols(B));
   size_t i,j;
 
+  fp inner_sum = 0;
+
   /* bulk of function */
-  for (i = 0; i < result->rows; i++)
+  for (i = 1; i <= get_rows(result); i++)
     {
-      for(j = 0; j <  result->cols; j++)
+      for(j = 1; j <= get_cols(result); j++)
 	{
-	  for (k = 0; k < A->cols; k++)
+	  for (k = 1; k <= get_cols(A); k++)
 	    {
-	      result->data[i * result->cols + j] = 
-		fp_mult(A->data[i * A->cols + k], B->data[k * B->cols + j]);
+	      inner_sum += fp_mult(get_elem(A,i,k), get_elem(B,k,j));
 	    }
+
+	  set_elem(product, i, j, inner_sum);
+	  inner_sum = 0;
 	}
     }
   
@@ -204,35 +214,42 @@ void naive_mat_mult(struct matrix* result, const struct matrix* A, const struct 
 /* Multiplies two matrices together using the Strassen algorithm. */
 void strass_mat_mult(struct matrix* result, const struct matrix* A, const struct matrix* B)
 {
-  /* First step is to copy the matrices into  */  
+  /* First step is to copy the matrices into  */
+
+  //TODO
+  
 }
 
 /* Given two matrices, returns their row-wise concatenation */
-struct matrix* row_concat(struct matrix* result, const struct matrix* A, const struct matrix* B)
+struct matrix* row_concat(const struct matrix* A, const struct matrix* B)
 {
-  if (A->rows != B->rows)
+  is_valid(A);
+  is_valid(B);
+
+  if (get_rows(A) != get_rows(B))
     {
       fprintf(stderr, "Error: matrices to concat are NOT correct dim");
       exit(0);
     }
 
-  struct matrix* result = init_matrix(A->rows, A->cols + B->cols);
+  struct matrix* result = init_matrix(get_rows(A), get_cols(A) + get_cols(B));
 
   size_t i,j;
 
-  for (i = 0; i < A->rows; i++)
+  /* FIX THIS...LOCALITY COULD BE BETTER */
+  for (i = 1; i <= get_rows(A); i++)
     {
-    for (j = 0; j < A->cols; j++)
+    for (j = 1; j <= get_cols(A); j++)
       {
-	result->data[i * result->cols + j] = A->data[i * A->cols + j];
+	set_elem(result, i, j, get_elem(A, i, j));
       }
     }
 
-  for (i = 0; i < B->rows; i++)
+  for (i = 1; i <= get_rows(B); i++)
     {
-      for(j = A->cols; j < A->cols + B->cols; j++)
+      for(j = get_cols(A)+1; j <= get_cols(A) + get_cols(B); j++)
 	{
-	  result->data[i * result->cols + j] = B->data[i * B->cols + j - A->cols];
+	  set_elem(result, i, j, get_elem(B, i, j - get_cols(A));
 	}
     }
 
@@ -242,6 +259,8 @@ struct matrix* row_concat(struct matrix* result, const struct matrix* A, const s
 /* returns the input matrix but with the ith row multiplied by s */
 inline void row_mult(matrix* inp, size_t i, fp s)
 {
+  is_valid(inp);
+
   if (i >= inp->rows)
     {
       fprintf(stderr, "Error: index out of bounds");
@@ -250,9 +269,9 @@ inline void row_mult(matrix* inp, size_t i, fp s)
 
   size_t k;
 
-  for (k = 0; k < inp->cols; inp++)
+  for (k = 1; k <= get_cols(inp); inp++)
     {
-      inp->data[i * inp->cols + k] *= s;
+      set_elem(inp, i, k, get_elem(inp, i, k) * s);
     }
 }
 
@@ -260,7 +279,9 @@ inline void row_mult(matrix* inp, size_t i, fp s)
 /* adds s*row_i to row_j */
 inline void row_add_mult(matrix* inp, size_t i, size_t j, fp s)
 {
-  if (i >= inp->rows || j >= inp->rows)
+  is_valid(inp);
+
+  if (i >= get_rows(inp) || j >= get_rows(inp))
     {
       fprintf(stderr, "Error: index out of bounds");
       exit(0);
@@ -268,9 +289,9 @@ inline void row_add_mult(matrix* inp, size_t i, size_t j, fp s)
 
   size_t k;
 
-  for (k = 0; k < inp->cols; inp++)
+  for (k = 1; k <= get_cols(inp); inp++)
     {
-      inp->data[j * inp->cols + k] += s * inp->data[i * inp->cols + k];
+      set_elem(inp, j, k, s*get_elem(inp, i, k) + get_elem(inp, j, k));
     }
 }
 
@@ -286,11 +307,11 @@ inline void switch_row(matrix* inp, size_t i, size_t j)
   size_t k;
   fp temp;
 
-  for (k = 0; k < inp->cols; inp++)
+  for (k = 1; k <= get_cols(inp); k++)
     {
-      temp = inp->data[j * inp->cols + k];
-      inp->data[j * inp->cols + k] = inp->data[i * inp->cols + k];
-      inp->data[i * inp->cols + k] = temp;
+      temp = get_elem(inp, j, k);
+      set_elem(inp, j, k, get_elem(inp, i, k));
+      set_elem(inp, i, k, temp);
     }
 }
 
@@ -305,17 +326,16 @@ locate_nonzero_col(const struct matrix* inp, size_t col, size_t starting_row)
    is_valid(inp);
    size_t i = starting_row;
 
-   while(i < inp->rows)
+   while(i <= get_rows(inp))
      {
        // could have gotten rid of boolean operation but want clearer code 
-       if (inp->data[i][col] != 0)
+       if (get_elem(inp, i, col) != 0)
 	 return i;
        else
 	 i++;
      }
  
    return -1;
-   
  }
 
 
@@ -357,7 +377,7 @@ locate_nonzero_col(const struct matrix* inp, size_t col, size_t starting_row)
 /* 	}   */
 
 /*       /\* By now we know we are dealing with a valid row *\/ */
-/*       if (result->data[curr_row][curr_col] != 1) */
+/*       if (result->data[curr_row][curr_col] !=n 1) */
 /* 	{ */
 /* 	  row_mult(result, curr_row, fp_div(1, result->data[curr_row][curr_col])); */
 /* 	} */

@@ -74,16 +74,46 @@ inline void set_elem(struct matrix* A, size_t row, size_t col, fp new_elem)
   A->data[(row - 1) * A->cols + (col - 1)] = new_elem;
 }
 
-inline size_t get_rows(struct matrix* A)
+inline size_t get_rows(const struct matrix* A)
 {
   return A->rows;
 } 
 
-inline size_t get_cols(struct matrix* A)
+inline size_t get_cols(const struct matrix* A)
 {
   return A->cols;
 }
 
+inline void set_rows(struct matrix* A, size_t new_rows)
+{
+  A->rows = new_rows;
+}
+
+inline void set_cols(struct matrix* A, size_t new_cols)
+{
+  A->cols = new_cols;
+}
+
 
 /* Functions to be defined... */
-struct matrix* init_mat(size_t rows
+
+/* NOTE: we can return matrices now as they are stored on the heap */
+struct matrix* init_matrix(size_t rows, size_t cols);
+struct matrix* deep_copy(const struct matrix* B);
+void free_matrix(struct matrix* A);
+
+inline bool are_conformable(const struct matrix* A, const struct matrix* B);
+inline bool same_dim(const struct matrix* A, const struct matrix* B);
+
+struct matrix* transpose(const matrix* A);
+struct matrix* add_mats(const struct matrix* A, const struct matrix* B);
+void naive_mat_mult(const struct matrix* A, const struct matrix* B);
+struct matrix* row_concat(const struct matrix* A, const struct matrix* B);
+
+inline void row_mult(matrix* inp, size_t i, fp s);
+inline void row_add_mult(matrix* inp, size_t i, size_t j, fp s);
+inline void switch_row(matrix* inp, size_t i, size_t j);
+inline size_t 
+locate_nonzero_col(const struct matrix* inp, size_t col, size_t starting_row);
+
+//STOPPED AT NAIVDE MAT MULT. NEED TO GO BACK AND RE-IMPLEMENT
