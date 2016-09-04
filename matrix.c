@@ -72,10 +72,11 @@ struct matrix* deep_copy(const struct matrix* B)
   struct matrix* A = malloc(sizeof(struct matrix));
  
   size_t i,j;
+
   set_rows(A, get_rows(B));
   set_cols(A, get_cols(B));
 
-  A->data = (fp*) malloc(rows * cols * sizeof(fp));
+  A->data = (fp*) malloc(get_rows(B) * get_cols(B) * sizeof(fp));
 
   for(i = 1; i <= get_rows(B); i++)
     {
@@ -115,7 +116,7 @@ inline bool same_dim(const struct matrix* A, const struct matrix* B)
    may be avoided. Once this is done...we swap in memory. Note
    we need to confirm that the input matrix is NULL so far...as in
    it has yet to be initialized */
-struct matrix* transpose(const matrix* A)
+struct matrix* transpose(const struct matrix* A)
 {
   is_valid(A);
 
@@ -172,11 +173,11 @@ struct matrix* add_mats(const struct matrix* A, const struct matrix* B)
 	}
     }
     
-  return result;
+  return sum;
 }
 
 /* returns AB via O(n^3) naive matrix multiplication time */
-void naive_mat_mult(const struct matrix* A, const struct matrix* B)
+struct matrix* naive_mat_mult(const struct matrix* A, const struct matrix* B)
 {
   /* valid input error checking */
   is_valid(A);
@@ -190,14 +191,14 @@ void naive_mat_mult(const struct matrix* A, const struct matrix* B)
 
   /* end valid input error checking */
   struct matrix* product = init_matrix(get_rows(A), get_cols(B));
-  size_t i,j;
+  size_t i,j,k;
 
   fp inner_sum = 0;
 
   /* bulk of function */
-  for (i = 1; i <= get_rows(result); i++)
+  for (i = 1; i <= get_rows(product); i++)
     {
-      for(j = 1; j <= get_cols(result); j++)
+      for(j = 1; j <= get_cols(product); j++)
 	{
 	  for (k = 1; k <= get_cols(A); k++)
 	    {
@@ -208,6 +209,8 @@ void naive_mat_mult(const struct matrix* A, const struct matrix* B)
 	  inner_sum = 0;
 	}
     }
+
+  return product;
   
 }
 
@@ -249,7 +252,7 @@ struct matrix* row_concat(const struct matrix* A, const struct matrix* B)
     {
       for(j = get_cols(A)+1; j <= get_cols(A) + get_cols(B); j++)
 	{
-	  set_elem(result, i, j, get_elem(B, i, j - get_cols(A));
+	  set_elem(result, i, j, get_elem(B, i, j - get_cols(A)));
 	}
     }
 
@@ -257,7 +260,7 @@ struct matrix* row_concat(const struct matrix* A, const struct matrix* B)
 }
 
 /* returns the input matrix but with the ith row multiplied by s */
-inline void row_mult(matrix* inp, size_t i, fp s)
+inline void row_mult(struct matrix* inp, size_t i, fp s)
 {
   is_valid(inp);
 
@@ -277,7 +280,7 @@ inline void row_mult(matrix* inp, size_t i, fp s)
 
 
 /* adds s*row_i to row_j */
-inline void row_add_mult(matrix* inp, size_t i, size_t j, fp s)
+inline void row_add_mult(struct matrix* inp, size_t i, size_t j, fp s)
 {
   is_valid(inp);
 
@@ -296,7 +299,7 @@ inline void row_add_mult(matrix* inp, size_t i, size_t j, fp s)
 }
 
 /* switches row i with row j*/
-inline void switch_row(matrix* inp, size_t i, size_t j)
+inline void switch_row(struct matrix* inp, size_t i, size_t j)
 {
   if (i >= inp->rows || j >= inp->rows)
     {
@@ -392,20 +395,20 @@ locate_nonzero_col(const struct matrix* inp, size_t col, size_t starting_row)
 /* } */
 
 /* Given a matrix, returns its reduced row-echelon form using gauss-jordan elimination */
-matrix Gauss_Jordan_Reduce(matrix mat);
+struct matrix Gauss_Jordan_Reduce(struct matrix mat);
 
 /* Given a matrix, returns its rank */
-int rank(matrix mat);
+int rank(struct matrix mat);
 
 /* Given a matrix, returns solutions to the corresponding homogenous system. */
-matrix solve_homog(matrix mat);
+struct matrix solve_homog(struct matrix mat);
 
 /* Given a matrix M and an appropriate vector b (encoded as a matrix), returns the solution 
    to Mx = b using a rudimentary method.  */
-matrix basic_solve(matrix M, matrix b);
+struct matrix basic_solve(struct matrix M, struct matrix b);
 
 /* Computes the determinant of M */
-fp det(matrix M);
+fp det(struct matrix M);
 
 /* on going issues with C:
 

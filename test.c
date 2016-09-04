@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "matrix.c" 
+#include <time.h>
 
 /* print a matrix to the console */
 void print_matrix(struct matrix* A)
@@ -18,13 +19,17 @@ void print_matrix(struct matrix* A)
     {
       for (j = 0; j <= get_cols(A); j++)
 	{
-	  printf(".2% ", get_elem(A, i, j));
+	  printf("%10.2f ", (float)get_elem(A, i, j));
 	}
       printf("\n");
     }
 
-  printf("\n");
+  printf("\n\n");
 }
+
+/* test addition */
+
+/* test multiplication */
 
 /* need to free all the test data */
 int main()
@@ -33,7 +38,7 @@ int main()
 
   print_matrix(mat);
 
-  free(mat); 
+  free_matrix(mat); 
 }
 
 

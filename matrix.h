@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include "fixed_point.h"
+#include "fixed_point.c"
 #include <stdlib.h>
-
 
 /* Each matrix will be a matrix of fixed point, of arbitrary precision. 
    May consider later modification. Also contains size of the matrix.
@@ -32,39 +32,39 @@ void is_valid(const struct matrix* A)
 {
   if (A == NULL)
     {
-      fprintf(stderr, "Error: data object NULL");
+      fprintf(stderr, "Error: data object NULL\n");
       exit(0);
     }
 
   else if (A->rows == 0)
     {
-      fprintf(stderr, "Error: invalid number of rows");
+      fprintf(stderr, "Error: invalid number of rows\n");
       exit(0);
     }
 
   else if (A->cols == 0)
     {
-      fprintf(stderr, "Error: invalid number of cols");
+      fprintf(stderr, "Error: invalid number of cols\n");
       exit(0);
     }
 
   else if (A->data == NULL)
     {
-      fprintf(stderr, "Error: data not initialized.");
+      fprintf(stderr, "Error: data not initialized.\n");
       exit(0);
     }
 
-  else if (sizeof(A->data) != (A->rows * A->cols * sizeof(fp)))
-    {
-      fprintf(stderr, "Error: matrix not correct size.");
-      exit(0);
-    }
+  //  else if (sizeof(A->data) != (A->rows * A->cols * sizeof(fp)))
+  // {
+  //  fprintf(stderr, "Error: matrix not correct size.\n");
+  //  exit(0);
+  //}
 }
 
 /* Allows easy access to a matrix using base-1 indexing. Make these get/set 
    functions inline to speed up time considerably: they are likely to be 
    deeply nested. No out of bounds checking: would be way too much overhead */
-inline fp get_elem(struct matrix* A, size_t row, size_t col)
+inline fp get_elem(const struct matrix* A, size_t row, size_t col)
 {
   return A->data[(row - 1) * A->cols + (col - 1)];
 }
@@ -105,14 +105,14 @@ void free_matrix(struct matrix* A);
 inline bool are_conformable(const struct matrix* A, const struct matrix* B);
 inline bool same_dim(const struct matrix* A, const struct matrix* B);
 
-struct matrix* transpose(const matrix* A);
+struct matrix* transpose(const struct matrix* A);
 struct matrix* add_mats(const struct matrix* A, const struct matrix* B);
-void naive_mat_mult(const struct matrix* A, const struct matrix* B);
+struct matrix*  naive_mat_mult(const struct matrix* A, const struct matrix* B);
 struct matrix* row_concat(const struct matrix* A, const struct matrix* B);
 
-inline void row_mult(matrix* inp, size_t i, fp s);
-inline void row_add_mult(matrix* inp, size_t i, size_t j, fp s);
-inline void switch_row(matrix* inp, size_t i, size_t j);
+inline void row_mult(struct matrix* inp, size_t i, fp s);
+inline void row_add_mult(struct matrix* inp, size_t i, size_t j, fp s);
+inline void switch_row(struct matrix* inp, size_t i, size_t j);
 inline size_t 
 locate_nonzero_col(const struct matrix* inp, size_t col, size_t starting_row);
 
