@@ -64,19 +64,25 @@ struct matrix* init_matrix(size_t rows, size_t cols)
 }
 
 
-/* performs a deep copy of the given matrix and returns a pointer to new data */
-struct matrix* deep_copy(const struct matrix* B)
+/* performs a deep copy of the given matrix and stores it in the input data structure.
+
+   WARNING: This function will clear any existing memory/dimensionality of B if
+            if it exists.
+
+ */
+struct matrix* deep_copy(struct matrix* B, const struct matrix* A)
 {
-  is_valid(B);
+  is_valid(A);
+  free_matrix(B);   // notice this frees REGARDLESS of B's initialization
  
-  struct matrix* A = malloc(sizeof(struct matrix));
+  struct matrix* B = malloc(sizeof(struct matrix));
  
   size_t i,j;
 
-  set_rows(A, get_rows(B));
-  set_cols(A, get_cols(B));
+  set_rows(B, get_rows(A));
+  set_cols(B, get_cols(A));
 
-  A->data = (fp*) malloc(get_rows(B) * get_cols(B) * sizeof(fp));
+  B->data = (fp*) malloc(get_rows(B) * get_cols(B) * sizeof(fp));
 
   for(i = 1; i <= get_rows(B); i++)
     {
@@ -94,7 +100,6 @@ void free_matrix(struct matrix* A)
 
   /* then the struct itself */
   free(A);
-
 }
 
 /* Given two matrices in the order A and then B, checks to see if AB makes sense.
@@ -111,12 +116,8 @@ inline bool same_dim(const struct matrix* A, const struct matrix* B)
   return (A->cols == B->cols && A->rows == B->rows);
 }
 
-/* we do this by copying the matrix and then swapping accordingly.
-   if we copy row by row a significant number of cache misses 
-   may be avoided. Once this is done...we swap in memory. Note
-   we need to confirm that the input matrix is NULL so far...as in
-   it has yet to be initialized */
-struct matrix* transpose(const struct matrix* A)
+/* naive implementation */
+struct matrix* naive_transpose(const struct matrix* A)
 {
   is_valid(A);
 
@@ -135,6 +136,9 @@ struct matrix* transpose(const struct matrix* A)
 
   return result;
 }
+
+/* implementation optimzied  */
+struct matrix* 
 
 /* Returns the sum of two matrices. Notice the sensitivity to row-major
    ordering of the matrix in main memory/caches */

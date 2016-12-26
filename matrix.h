@@ -97,7 +97,7 @@ inline void set_cols(struct matrix* A, size_t new_cols)
 
 /* Functions to be defined... */
 
-/* NOTE: we can return matrices now as they are stored on the heap */
+/* NOTE: We make the deliberate design decision to  */
 struct matrix* init_matrix(size_t rows, size_t cols);
 struct matrix* deep_copy(const struct matrix* B);
 void free_matrix(struct matrix* A);
@@ -107,7 +107,7 @@ inline bool same_dim(const struct matrix* A, const struct matrix* B);
 
 struct matrix* transpose(const struct matrix* A);
 struct matrix* add_mats(const struct matrix* A, const struct matrix* B);
-struct matrix*  naive_mat_mult(const struct matrix* A, const struct matrix* B);
+struct matrix* naive_mat_mult(const struct matrix* A, const struct matrix* B);
 struct matrix* row_concat(const struct matrix* A, const struct matrix* B);
 
 inline void row_mult(struct matrix* inp, size_t i, fp s);
