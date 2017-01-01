@@ -5,13 +5,15 @@
 #include <stdio.h>
 #include <assert.h>
 #include "fixed_point.h"
-#include "fixed_point.c"
 #include <stdlib.h>
+#include "system_spec.h"
+#include <pthread.h>
 
-/* Each matrix will be a matrix of fixed point, of arbitrary precision. 
-   May consider later modification. Also contains size of the matrix.
-
-   Everything is to be allocated on the heap. */
+/*
+   Data is fixed point, precision specified in fixed_point.h. 
+   Also contains size of the matrix, and data of the matrix
+   is allocated on the heap. 
+*/
 
 struct matrix
 {
@@ -27,6 +29,12 @@ struct matrix
    (sensible row/column numbers, data not NULL, and matrix is correct size).
 
    IF NOT: prints error message and exits the entire program
+
+   NOTE: I know of no way to implement a way to check for the size of the 
+         corresponding array independently of the row/column sizes provided:
+	 so for right now I must be exceedingly careful in determining how
+	 the pointer memory is allocated for this individual array element. 
+	 This is noted in the README.
  */
 void is_valid(const struct matrix* A)
 {
@@ -53,17 +61,11 @@ void is_valid(const struct matrix* A)
       fprintf(stderr, "Error: data not initialized.\n");
       exit(0);
     }
-
-  //  else if (sizeof(A->data) != (A->rows * A->cols * sizeof(fp)))
-  // {
-  //  fprintf(stderr, "Error: matrix not correct size.\n");
-  //  exit(0);
-  //}
 }
 
 /* Allows easy access to a matrix using base-1 indexing. Make these get/set 
    functions inline to speed up time considerably: they are likely to be 
-   deeply nested. No out of bounds checking: would be way too much overhead */
+   deeply nested. Out of bounds checking is also performed.  */
 inline fp get_elem(const struct matrix* A, size_t row, size_t col)
 {
   return A->data[(row - 1) * A->cols + (col - 1)];
@@ -97,23 +99,34 @@ inline void set_cols(struct matrix* A, size_t new_cols)
 
 /* Functions to be defined... */
 
-/* NOTE: We make the deliberate design decision to  */
+/* NOTE: We make the deliberate design decision to pass the output in
+         as opposed to having the functions return it. Discussion in
+         Design Doc. */
 struct matrix* init_matrix(size_t rows, size_t cols);
-struct matrix* deep_copy(const struct matrix* B);
+void deep_copy(const struct matrix*, struct matrix*);
 void free_matrix(struct matrix* A);
 
 inline bool are_conformable(const struct matrix* A, const struct matrix* B);
 inline bool same_dim(const struct matrix* A, const struct matrix* B);
 
-struct matrix* transpose(const struct matrix* A);
-struct matrix* add_mats(const struct matrix* A, const struct matrix* B);
-struct matrix* naive_mat_mult(const struct matrix* A, const struct matrix* B);
-struct matrix* row_concat(const struct matrix* A, const struct matrix* B);
+/* Destination for output is always the last argument. 
+
+   WARNING: All these methods completely overwrite memory associated with 
+            the output matrix 
+*/
+void naive_transpose(const struct matrix* A, struct matrix* B);
+void add_mats(const struct matrix* A, const struct matrix* B, struct matrix* C);
+void naive_mat_mult(const struct matrix* A, const struct matrix* B, struct matrix* C);
+void row_concat(const struct matrix* A, const struct matrix* B, struct matrix* C);
 
 inline void row_mult(struct matrix* inp, size_t i, fp s);
 inline void row_add_mult(struct matrix* inp, size_t i, size_t j, fp s);
 inline void switch_row(struct matrix* inp, size_t i, size_t j);
-inline size_t 
-locate_nonzero_col(const struct matrix* inp, size_t col, size_t starting_row);
+inline size_t locate_nonzero_col(const struct matrix* inp, 
+				 size_t col, size_t starting_row);
 
-//STOPPED AT NAIVDE MAT MULT. NEED TO GO BACK AND RE-IMPLEMENT
+
+/* Following functions are optimized for the x1 carbon target machine */
+void transpose_i7(const struct matrix*, struct matrix*);
+void strass_mat_mult_i7(struct matrix* result, const struct matrix* A, const struct matrix* B);
+

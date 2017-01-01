@@ -38,9 +38,10 @@ D SADASDSADSADSADSADSADSADSADASDASDASDASD */
    fractional bits.  */
 #define FRAC_P 14
 
-/* note we use signed here. */
-typedef fp int32_t;
+#define MAX(X, Y) (((X) > (Y) ? (X) : (Y) ))
 
+/* note we use signed here. */
+typedef int32_t fp;
 inline fp int_to_fp(int32_t);
 inline int32_t fp_to_int(int32_t);
 inline fp add_fp(fp, fp);
@@ -77,12 +78,12 @@ inline fp add_fp(fp x, fp y)
    by the casting we use. */
 inline fp mult_fp(fp x, fp y)
 {
-  return ((int64_t x) * y) >> FRAC_P;  
+  return (fp) ((( (int64_t) x) * y) >> FRAC_P);  
 }
 
-inline fp div_fp()
+inline fp div_fp(fp x, fp y)
 {
-  return (fp) (((int64_t x) << FRAC_P) / y);
+  return (fp) ((( (int64_t) x) << FRAC_P) / y);
 }
 
 

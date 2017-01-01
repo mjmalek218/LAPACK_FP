@@ -46,6 +46,11 @@ bool test_transpose()
   /* first test matrix of all zeros and see if it still zeros */
   struct matrix* Z = init_matrix(rows, cols);
 
+  struct matrix* dummy_mat;
+
+  print_matrix(Z);
+
+
   for (i = 1; i <= rows; i++)
     {
       for (j = 1; j <= cols; j++)
@@ -55,7 +60,10 @@ bool test_transpose()
     }
 
   /* Now compute the result of the transpose */
-  struct matrix* T = transpose(Z); 
+  transpose_i7(Z, dummy_mat); 
+
+  print_matrix(Z);
+  print_matrix(dummy_mat);
 
   for (i = 1; i <= cols; i++)
     {
@@ -77,29 +85,27 @@ bool test_transpose()
 	}
     }
 
-  T = transpose(R); 
+  transpose_i7(R, dummy_mat); 
   
   for (i = 1; i <= cols; i++)
     {
       for (j = 1; j <= rows; j++)
 	{
-	  if (get_elem(T, i, j) != get_elem(R, j, i))
+	  if (get_elem(dummy_mat, i, j) != get_elem(R, j, i))
 	    return false;
 	}
     }
 
 
-  // FINISHNFIHSNIFSNIDNSINDIS BELOW
-
-
 
   /* finally test a 1x1 matrix */
   struct matrix* ONE = init_matrix(1, 1);
-  T = transpose
+  transpose_i7(ONE, dummy_mat);
 
+  print_matrix(dummy_mat);
 
   free_matrix(Z);
-  free_matrix(T);
+  free_matrix(dummy_mat);
   free_matrix(R);
 
   return true;

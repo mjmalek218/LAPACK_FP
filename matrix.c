@@ -24,13 +24,13 @@
 /* Allocates necessary heap memory. actual matrix memory is garbage. */
 struct matrix* init_matrix(size_t rows, size_t cols)
 {
-  // error checking
+  /* error checking */
   if (rows == 0)
     {
       fprintf(stderr, "Error: invalid number of rows");
       exit(0);
     }
-
+  
   else if (cols == 0)
     {
       fprintf(stderr, "Error: invalid number of cols");
@@ -46,7 +46,6 @@ struct matrix* init_matrix(size_t rows, size_t cols)
       exit(0);
     } 
 
-  size_t i,j;
   set_rows(A, rows);
   set_cols(A, cols);
 
@@ -63,36 +62,7 @@ struct matrix* init_matrix(size_t rows, size_t cols)
   return A;
 }
 
-
-/* performs a deep copy of the given matrix and stores it in the input data structure.
-
-   WARNING: This function will clear any existing memory/dimensionality of B if
-            if it exists.
-
- */
-struct matrix* deep_copy(struct matrix* B, const struct matrix* A)
-{
-  is_valid(A);
-  free_matrix(B);   // notice this frees REGARDLESS of B's initialization
- 
-  struct matrix* B = malloc(sizeof(struct matrix));
- 
-  size_t i,j;
-
-  set_rows(B, get_rows(A));
-  set_cols(B, get_cols(A));
-
-  B->data = (fp*) malloc(get_rows(B) * get_cols(B) * sizeof(fp));
-
-  for(i = 1; i <= get_rows(B); i++)
-    {
-      for(j = 1; j <= get_cols(B); j++)
-	{
-	  set_elem(A, i, j, get_elem(B, i, j));
-	}
-    } 
-}
-
+/* Frees both the data and the struct. */
 void free_matrix(struct matrix* A)
 {
   /* first free the data */
@@ -100,6 +70,41 @@ void free_matrix(struct matrix* A)
 
   /* then the struct itself */
   free(A);
+}
+
+
+/* Clears whatever is inside the matrix currently and resizes
+   the matrix with new memory. Prints to standard error if
+   something went awry with the routine...since we call init matrix.  */
+void reset_matrix(struct matrix* B, size_t rows, size_t cols)
+{
+  free_matrix(B);   
+  set_rows(B, rows);
+  set_cols(B, cols);
+
+  B = init_matrix(rows, cols); 
+}
+
+/* performs a deep copy of the given matrix and stores it in the input data structure.
+
+   WARNING: This function will clear any existing memory/dimensionality of B if
+            if it exists.
+ */
+void deep_copy(const struct matrix* A, struct matrix* B)
+{
+  is_valid(A);
+  
+  size_t i,j;
+
+  reset_matrix(B, get_rows(A), get_cols(A));
+
+  for(i = 1; i <= get_rows(B); i++)
+    {
+      for(j = 1; j <= get_cols(B); j++)
+	{
+	  set_elem(B, i, j, get_elem(A, i, j));
+	}
+    } 
 }
 
 /* Given two matrices in the order A and then B, checks to see if AB makes sense.
@@ -116,12 +121,12 @@ inline bool same_dim(const struct matrix* A, const struct matrix* B)
   return (A->cols == B->cols && A->rows == B->rows);
 }
 
-/* naive implementation */
-struct matrix* naive_transpose(const struct matrix* A)
+/* naive implementation. When B is passed in, it is cleared.*/
+void naive_transpose(const struct matrix* A, struct matrix* B)
 {
   is_valid(A);
+  reset_matrix(B, get_rows(A), get_cols(A));
 
-  struct matrix* result = init_matrix(get_cols(A), get_rows(A));
   size_t i,j;
 
   /* we swap indices. note this suffers from poor
@@ -130,25 +135,21 @@ struct matrix* naive_transpose(const struct matrix* A)
     {
       for (j = 1; j <= get_cols(A); j++)
 	{
-	  set_elem(result, j, i,  get_elem(A, i, j));	
+	  set_elem(B, j, i, get_elem(A, i, j));	
 	}
     }
-
-  return result;
 }
-
-/* implementation optimzied  */
-struct matrix* 
 
 /* Returns the sum of two matrices. Notice the sensitivity to row-major
    ordering of the matrix in main memory/caches */
-struct matrix* add_mats(const struct matrix* A, const struct matrix* B)
+void add_mats(const struct matrix* A, const struct matrix* B, struct matrix* sum)
 {
 
   /* First *need* to check to see if A and B are of same dim...
      and sensible. This involves error-catching.  */
   is_valid(A);
   is_valid(B);
+
 
   if (!same_dim(A,B))
     {
@@ -160,7 +161,9 @@ struct matrix* add_mats(const struct matrix* A, const struct matrix* B)
   size_t m = get_rows(A);
   size_t n = get_cols(A);
 
-  struct matrix* sum = init_matrix(m,n);
+  /* Clear out/init destination for sum */
+  free_matrix(sum);
+  sum = init_matrix(m,n);
 
   /* initialize components of the return value */
   set_rows(sum, m);
@@ -173,15 +176,13 @@ struct matrix* add_mats(const struct matrix* A, const struct matrix* B)
          locality in the cache will be disrupted. */
       for (j = 1; j <= n; j++)
 	{
-	  set_elem(sum, i, j, fp_add(get_elem(A, i, j), get_elem(B, i, j)));
+	  set_elem(sum, i, j, add_fp(get_elem(A, i, j), get_elem(B, i, j)));
 	}
     }
-    
-  return sum;
 }
 
 /* returns AB via O(n^3) naive matrix multiplication time */
-struct matrix* naive_mat_mult(const struct matrix* A, const struct matrix* B)
+void naive_mat_mult(const struct matrix* A, const struct matrix* B, struct matrix* product)
 {
   /* valid input error checking */
   is_valid(A);
@@ -192,9 +193,10 @@ struct matrix* naive_mat_mult(const struct matrix* A, const struct matrix* B)
       fprintf(stderr, "Error: matrices to multiply are NOT comformable");
       exit(0);
     }
+  /* end error checking */
 
-  /* end valid input error checking */
-  struct matrix* product = init_matrix(get_rows(A), get_cols(B));
+  /* Clear out product and init */
+  reset_matrix(product, get_rows(A), get_cols(B));
   size_t i,j,k;
 
   fp inner_sum = 0;
@@ -206,29 +208,17 @@ struct matrix* naive_mat_mult(const struct matrix* A, const struct matrix* B)
 	{
 	  for (k = 1; k <= get_cols(A); k++)
 	    {
-	      inner_sum += fp_mult(get_elem(A,i,k), get_elem(B,k,j));
+	      inner_sum += mult_fp(get_elem(A,i,k), get_elem(B,k,j));
 	    }
 
 	  set_elem(product, i, j, inner_sum);
 	  inner_sum = 0;
 	}
     }
-
-  return product;
-  
 }
 
-/* Multiplies two matrices together using the Strassen algorithm. */
-void strass_mat_mult(struct matrix* result, const struct matrix* A, const struct matrix* B)
-{
-  /* First step is to copy the matrices into  */
-
-  //TODO
-  
-}
-
-/* Given two matrices, returns their row-wise concatenation */
-struct matrix* row_concat(const struct matrix* A, const struct matrix* B)
+/* Given two matrices A and B , returns their row-wise concatenation A|B */
+void row_concat(const struct matrix* A, const struct matrix* B, struct matrix* result)
 {
   is_valid(A);
   is_valid(B);
@@ -239,8 +229,8 @@ struct matrix* row_concat(const struct matrix* A, const struct matrix* B)
       exit(0);
     }
 
-  struct matrix* result = init_matrix(get_rows(A), get_cols(A) + get_cols(B));
-
+  
+  reset_matrix(result, get_rows(A), get_cols(A) + get_cols(B)); 
   size_t i,j;
 
   /* FIX THIS...LOCALITY COULD BE BETTER */
@@ -259,11 +249,13 @@ struct matrix* row_concat(const struct matrix* A, const struct matrix* B)
 	  set_elem(result, i, j, get_elem(B, i, j - get_cols(A)));
 	}
     }
-
-  return result;
 }
 
-/* returns the input matrix but with the ith row multiplied by s */
+/* returns the input matrix but with the ith row multiplied by s.
+
+   WARNING: This actually ALTERS the input, there's no additional 
+   pointer reference passed in 
+ */
 inline void row_mult(struct matrix* inp, size_t i, fp s)
 {
   is_valid(inp);
@@ -275,7 +267,7 @@ inline void row_mult(struct matrix* inp, size_t i, fp s)
     }
 
   size_t k;
-
+  
   for (k = 1; k <= get_cols(inp); inp++)
     {
       set_elem(inp, i, k, get_elem(inp, i, k) * s);
@@ -283,7 +275,11 @@ inline void row_mult(struct matrix* inp, size_t i, fp s)
 }
 
 
-/* adds s*row_i to row_j */
+/* adds s*row_i to row_j 
+
+   WARNING: This actually ALTERS the input, there's no additional 
+   pointer reference passed in 
+*/
 inline void row_add_mult(struct matrix* inp, size_t i, size_t j, fp s)
 {
   is_valid(inp);
@@ -302,7 +298,12 @@ inline void row_add_mult(struct matrix* inp, size_t i, size_t j, fp s)
     }
 }
 
-/* switches row i with row j*/
+/* switches row i with row j
+
+   
+   WARNING: This actually ALTERS the input, there's no additional 
+   pointer reference passed in 
+*/
 inline void switch_row(struct matrix* inp, size_t i, size_t j)
 {
   if (i >= inp->rows || j >= inp->rows)
@@ -345,59 +346,6 @@ locate_nonzero_col(const struct matrix* inp, size_t col, size_t starting_row)
    return -1;
  }
 
-
-/* /\* Given a matrix, returns its row-echelon form using gaussian elimination *\/ */
-/* void Gauss_Eliminate(struct matrix* result, const struct matrix* mat) */
-/* { */
- 
-/*   /\* make sure result is NOT NULL *\/ */
-/*    if (A == NULL) */
-/*    { */
-/*      fprintf(stderr, "Error: data object NULL"); */
-/*      exit(0); */
-/*    } */
-
-/*   /\* initialize it to the input matrix *\/ */
-/*   init(result, mat); */
-
-/*   size_t curr_col = 0; */
-/*   size_t curr_row = 0; */
-/*   size_t i = 0; */
-/*   size_t next_piv, j; */
-
-/*   while (curr_col < result->cols) */
-/*     { */
-/*       /\* First check for first non-zero pivot *\/ */
-/*       next_piv = locate_nonzero_col(result, curr_col, curr_row); */
-      
-/*       if (next_piv == -1) */
-/* 	{ */
-/* 	  curr_col++; */
-/* 	  continue; */
-/* 	} */
-
-/*       /\* otherwise if there is a non-zero element that is not this row... */
-/*          switch it into this row *\/ */
-/*       else if (next_piv != curr_row) */
-/* 	{ */
-/* 	  switch_row(result, curr_row, next_piv); */
-/* 	}   */
-
-/*       /\* By now we know we are dealing with a valid row *\/ */
-/*       if (result->data[curr_row][curr_col] !=n 1) */
-/* 	{ */
-/* 	  row_mult(result, curr_row, fp_div(1, result->data[curr_row][curr_col])); */
-/* 	} */
-      
-/*       /\* Now go throw and eliminate the remaining rows *\/ */
-/*       for (j = curr_row; j < result->rows; j++) */
-/* 	{ */
-/* 	  if () */
-/* 	} */
-
-/*     } */
-/* } */
-
 /* Given a matrix, returns its reduced row-echelon form using gauss-jordan elimination */
 struct matrix Gauss_Jordan_Reduce(struct matrix mat);
 
@@ -414,11 +362,101 @@ struct matrix basic_solve(struct matrix M, struct matrix b);
 /* Computes the determinant of M */
 fp det(struct matrix M);
 
+/* The following implementations are optimized for the target machine:  */
+
+/* Multi-threaded optimized transpose routine.
+
+   -- Inner most caches of core i7 is 32 kB. With this in mind, we operate upon 
+      16 kB of source matrix and 16 kB of the destination matrix at once
+
+   -- There are four cores total, so we limit the computation to 4 threads maximum
+
+ */
+void transpose_i7(const struct matrix* A, struct matrix* B)
+{
+  /* error input checking. Need to make sure A and B are the correct sizes. */
+  is_valid(A);
+  is_valid(B);
+
+  size_t s_rows = get_rows(A);
+  size_t s_cols = get_cols(A);
+  size_t net_size = s_rows * s_cols;
+
+  reset_matrix(B, s_cols, s_rows);
+
+  /* s and d are the indices for which "block" we are in for the source
+     and destination matrices in the iteration */
+  size_t s;
+  size_t d;
+
+  
+  size_t i;
+  size_t j;
+
+  size_t max_s;
+  size_t max_d;
+
+  /* For each element i in the source matrix, we can reverse engineer the 
+     corresponding row and col in the destination matrix. These variables
+     will hold the results of this reverse engineering on each iteration. */
+  size_t dest_row;
+  size_t dest_col;
+   
+  /* We create this array then operate on it independently of 
+     the accessor functions. We need to do this to optimize 
+     Cache memory. This is one of the few instances in which 
+     we ignore the safety measures, but in general
+     attempt to avoid it. */
+
+
+  reset_matrix(B, s_cols, s_rows);
+  const fp* source = A->data;
+  
+  /* Loop over blocks for source array */
+  for (s = 1; s <= net_size; s += (L1D_SIZE/2))
+    {
+      max_s = MAX(net_size, s + L1D_SIZE/2);
+
+      /* Loop over blocks for destination array */
+      for (d = 1; d <= net_size; d+= (L1D_SIZE/2))
+	{
+	  max_s = MAX(net_size, s + L1D_SIZE/2);
+	  max_d = MAX(net_size, d + L1D_SIZE/2);
+
+	  for (i = s+1; i <= max_s; i++)
+	    {
+	      dest_col = i / s_cols + 1;
+	      dest_row = (i-1) % s_cols +1;
+
+	      /* Since we are iterating over blocks we *do* need
+	         to compute the absolute index j inside the d 
+	         range. */
+	      j = dest_col + (dest_row-1) * s_rows;
+
+	      /* We make sure to limit our editing to the data that is
+	         already cached, attempting to minimize thrashing. */
+	      if (j <= max_d)
+		{
+		  set_elem(B, dest_row, dest_col, get_elem(A, dest_col, dest_row));
+		}
+
+	    }
+	}
+    }
+}
+
+
+/* Multiplies two matrices together using the Strassen algorithm.
+   Optimized for the x1 carbon machine */
+void strass_mat_mult_i7(struct matrix* result, const struct matrix* A, const struct matrix* B)
+{
+ 
+  
+}
+
 /* on going issues with C:
 
    --does not support function overloading on arguments
    --does not support operator overloading
    --no objects/classes (difficult to organize larger projects)
 */
-
-
