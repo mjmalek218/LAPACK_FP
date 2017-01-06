@@ -42,8 +42,29 @@ DESIGN CHOICES:
 	  input matrices, we can simultaneously support both cases. 
 
 
-       3. 1-Based Indexing of matrices. Just makes more sense to my mathematical
+       3. Along the Lines in (2), we assume that matrices are *always* initialized,
+          so there is indeed memory to clear. This means whenever a matrix is declared,
+	  it should also be initialized lest a segmentaiton fault occur upon attempting
+ 	  to free stack memory
+
+
+       4. 1-Based Indexing of matrices. Just makes more sense to my mathematical
           intuition
+
+
+       5. Including an "initialization" boolean in every matrix to determine
+          if its memory has been freed or not. Since this is only modified by
+	  *two* functions, init_matrix and free_matrix, it makes it easy to 
+	  to debug memory management problems, in theory. There is a downside
+	  to this: if the code is shipped this obviously leaves
+	  an extrmeley vulnerable hole for discombobulation, but it is only
+	  intended for personal usage so not too much of a problem. 
+	  Also it requires more memory allocation for a given matrix, but in
+	  theory this is made up later because it means I don't need to initialize
+	  matrices immediately. 
+
+       6. Including a "resize" function that works similarly to how
+
  
 ********************************************************
 

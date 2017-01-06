@@ -23,6 +23,11 @@ struct matrix
   /* The actual matrix. */
   fp* data; 
 
+
+  /* Boolean to determine if the matrix has been initialized. 
+     0 if no, 1 if yes. The free_matrix function reverts this 
+     to. DO NOT */
+  bool is_initialized;
 };
 
 /* checks to see if a matrix is valid 
@@ -105,6 +110,7 @@ inline void set_cols(struct matrix* A, size_t new_cols)
 struct matrix* init_matrix(size_t rows, size_t cols);
 void deep_copy(const struct matrix*, struct matrix*);
 void free_matrix(struct matrix* A);
+void resize_matrix(struct matrix* B, size_t rows, size_t cols)
 
 inline bool are_conformable(const struct matrix* A, const struct matrix* B);
 inline bool same_dim(const struct matrix* A, const struct matrix* B);

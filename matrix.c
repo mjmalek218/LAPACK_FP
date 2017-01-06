@@ -59,30 +59,41 @@ struct matrix* init_matrix(size_t rows, size_t cols)
       exit(0);
     }  
 
+  A->is_initialized = true;
+
   return A;
 }
 
-/* Frees both the data and the struct. */
+/* If allocated, frees both the data and the struct. */
 void free_matrix(struct matrix* A)
 {
+  /* If matrix is not initialized, do nothing */
+  if (!A->is_initialized)
+    return;
+
+
   /* first free the data */
   free(A->data);
 
   /* then the struct itself */
   free(A);
+
+  /* Then let future calls of free/init know it is freed */
+  A->is_initialized = false;
+
 }
 
 
-/* Clears whatever is inside the matrix currently and resizes
-   the matrix with new memory. Prints to standard error if
-   something went awry with the routine...since we call init matrix.  */
-void reset_matrix(struct matrix* B, size_t rows, size_t cols)
+/* Resizes the matrix according to the rows and columns given. Attempts
+   to save as many elements as many elements as possible */
+void resize_matrix(struct matrix* B, size_t rows, size_t cols)
 {
   free_matrix(B);   
-  set_rows(B, rows);
-  set_cols(B, cols);
 
-  B = init_matrix(rows, cols); 
+  //TODOTODOTODOTODOTODOTODOR NEED TO FIX THIS AND ALL RESET REFERENCES
+
+  /* Rather than returning a function handle, this  */
+  B; 
 }
 
 /* performs a deep copy of the given matrix and stores it in the input data structure.
@@ -376,13 +387,10 @@ void transpose_i7(const struct matrix* A, struct matrix* B)
 {
   /* error input checking. Need to make sure A and B are the correct sizes. */
   is_valid(A);
-  is_valid(B);
 
   size_t s_rows = get_rows(A);
   size_t s_cols = get_cols(A);
   size_t net_size = s_rows * s_cols;
-
-  reset_matrix(B, s_cols, s_rows);
 
   /* s and d are the indices for which "block" we are in for the source
      and destination matrices in the iteration */
@@ -393,8 +401,8 @@ void transpose_i7(const struct matrix* A, struct matrix* B)
   size_t i;
   size_t j;
 
-  size_t max_s;
-  size_t max_d;
+  size_t min_s;
+  size_t min_d;
 
   /* For each element i in the source matrix, we can reverse engineer the 
      corresponding row and col in the destination matrix. These variables
@@ -407,23 +415,20 @@ void transpose_i7(const struct matrix* A, struct matrix* B)
      Cache memory. This is one of the few instances in which 
      we ignore the safety measures, but in general
      attempt to avoid it. */
-
-
   reset_matrix(B, s_cols, s_rows);
   const fp* source = A->data;
   
   /* Loop over blocks for source array */
   for (s = 1; s <= net_size; s += (L1D_SIZE/2))
     {
-      max_s = MAX(net_size, s + L1D_SIZE/2);
+      min_s = min(net_size, s + L1D_SIZE/2);
 
       /* Loop over blocks for destination array */
       for (d = 1; d <= net_size; d+= (L1D_SIZE/2))
 	{
-	  max_s = MAX(net_size, s + L1D_SIZE/2);
-	  max_d = MAX(net_size, d + L1D_SIZE/2);
+	  min_d = min(net_size, d + L1D_SIZE/2);
 
-	  for (i = s+1; i <= max_s; i++)
+	  for (i = s; i <= min_s; i++)
 	    {
 	      dest_col = i / s_cols + 1;
 	      dest_row = (i-1) % s_cols +1;
@@ -435,7 +440,7 @@ void transpose_i7(const struct matrix* A, struct matrix* B)
 
 	      /* We make sure to limit our editing to the data that is
 	         already cached, attempting to minimize thrashing. */
-	      if (j <= max_d)
+	      if (j <= min_d)
 		{
 		  set_elem(B, dest_row, dest_col, get_elem(A, dest_col, dest_row));
 		}

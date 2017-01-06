@@ -38,10 +38,19 @@ D SADASDSADSADSADSADSADSADSADASDASDASDASD */
    fractional bits.  */
 #define FRAC_P 14
 
-#define MAX(X, Y) (((X) > (Y) ? (X) : (Y) ))
-
 /* note we use signed here. */
 typedef int32_t fp;
+
+inline min(fp x, fp y)
+{
+  return (x < y) ? x : y;
+}
+
+inline max(fp x, fp y)
+{
+  return (x < y) ? y : x;
+}
+
 inline fp int_to_fp(int32_t);
 inline int32_t fp_to_int(int32_t);
 inline fp add_fp(fp, fp);

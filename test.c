@@ -10,10 +10,10 @@
 #include <stdlib.h>
 
 /* This is the maximum size of a single dimension for our test matrices */
-#define MAX_LENGTH 1000
+#define MAX_LENGTH 10
 
 /* print a matrix to the console */
-void print_matrix(struct matrix* A)
+void print_matrix(const struct matrix* A)
 {
   is_valid(A);
 
@@ -37,27 +37,17 @@ void print_matrix(struct matrix* A)
 bool test_transpose()
 {
   /* seed random */
-  srand(time(NULL));
+  //  srand(time(NULL));
 
-  size_t rows = rand() % MAX_LENGTH;
-  size_t cols = rand() % MAX_LENGTH;
+  size_t rows = 5;
+  size_t cols = 5;
   int i,j = 0; //iterators
 
   /* first test matrix of all zeros and see if it still zeros */
   struct matrix* Z = init_matrix(rows, cols);
 
-  struct matrix* dummy_mat;
-
+  struct matrix* dummy_mat; 
   print_matrix(Z);
-
-
-  for (i = 1; i <= rows; i++)
-    {
-      for (j = 1; j <= cols; j++)
-	{
-	  set_elem(Z, i, j, (fp)0);
-	}
-    }
 
   /* Now compute the result of the transpose */
   transpose_i7(Z, dummy_mat); 
@@ -121,11 +111,8 @@ bool test_transpose()
 /* need to free all the test data */
 int main()
 {
-  struct matrix* mat = init_matrix(5, 5);
-
-  print_matrix(mat);
-
-  free_matrix(mat); 
+  /* Should be all 0's */
+  test_transpose();
 }
 
 
