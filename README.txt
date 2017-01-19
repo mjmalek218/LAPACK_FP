@@ -57,13 +57,16 @@ DESIGN CHOICES:
 	  *two* functions, init_matrix and free_matrix, it makes it easy to 
 	  to debug memory management problems, in theory. There is a downside
 	  to this: if the code is shipped this obviously leaves
-	  an extrmeley vulnerable hole for discombobulation, but it is only
+	  a vulnerability to discombobulation, but it is only
 	  intended for personal usage so not too much of a problem. 
 	  Also it requires more memory allocation for a given matrix, but in
 	  theory this is made up later because it means I don't need to initialize
 	  matrices immediately. 
 
-       6. Including a "resize" function that works similarly to how
+       6. Not re-using "init_matrix" in the reset_matrix function. The reasoning
+          behind this is quite simple: since init_matrix initializes a matrix
+          by "returning" a matrix, we would need to pass in a double pointer to
+	  use this method.  
 
  
 ********************************************************

@@ -84,16 +84,34 @@ void free_matrix(struct matrix* A)
 }
 
 
-/* Resizes the matrix according to the rows and columns given. Attempts
-   to save as many elements as many elements as possible */
-void resize_matrix(struct matrix* B, size_t rows, size_t cols)
+/* Frees the data from the input matrix and allocates new memory corresponding
+   to the new input dimensions for the matrix...
+
+   Eventually there may be a better
+   way to incorporatre the already allocated memory into the new matrix, but for
+   now we simply re-allocate completely.  
+
+   REMEMBER: free_matrix deals with un-initialized matrices automatically
+*/
+void reset_matrix(struct matrix* B, size_t rows, size_t cols)
 {
-  free_matrix(B);   
+  free_matrix(B);
 
-  //TODOTODOTODOTODOTODOTODOR NEED TO FIX THIS AND ALL RESET REFERENCES
+  /* First need to initialize the struct *itself* prior to the
+     pointer... */
+  B = malloc(sizeof(struct matrix));
 
-  /* Rather than returning a function handle, this  */
-  B; 
+  /* We can't re-use init_matrix here unfortunately since init_matrix
+   *returns* a pointer to its matrix as its output, so we would need to 
+    pass in a double pointer to really change the struct. We choose
+    instead to hard code the solution, and then base all matrix functions
+    upon these three functions: {init_matrix, free_matrix, reset_matrix} */
+  B->data = (fp*) malloc(rows * cols * sizeof(fp)); 
+
+  B->rows = rows;
+  B->cols = cols;
+
+  B->is_initialized = true;
 }
 
 /* performs a deep copy of the given matrix and stores it in the input data structure.
@@ -121,7 +139,7 @@ void deep_copy(const struct matrix* A, struct matrix* B)
 /* Given two matrices in the order A and then B, checks to see if AB makes sense.
    Since this is a check function...code is so small makes sense to make it
    inline. */
-inline bool are_conformable(const struct matrix* A, const struct matrix* B)
+bool are_conformable(const struct matrix* A, const struct matrix* B)
 {
   return (get_cols(A) == get_rows(B));
 } 
@@ -244,7 +262,7 @@ void row_concat(const struct matrix* A, const struct matrix* B, struct matrix* r
   reset_matrix(result, get_rows(A), get_cols(A) + get_cols(B)); 
   size_t i,j;
 
-  /* FIX THIS...LOCALITY COULD BE BETTER */
+  /* ...LOCALITY COULD BE BETTER HERE */
   for (i = 1; i <= get_rows(A); i++)
     {
     for (j = 1; j <= get_cols(A); j++)
@@ -337,7 +355,11 @@ inline void switch_row(struct matrix* inp, size_t i, size_t j)
 /* Locates the first non-zero element in a column. 
    If none is found...returns -1. Note there *could* be an error here if
    the matrix column dimension is MAX_UNSIGNED_INT + 1 (make sure not to 
-   allocate such enormous matrices) */
+   allocate such enormous matrices) 
+
+   NOTE TO SELF: WHY DID I WRITE THIS FUNCTION?? Oh...for Gaussian-reduction...
+   Not sure if this is really efficient...need to understand this better
+*/
 inline size_t 
 locate_nonzero_col(const struct matrix* inp, size_t col, size_t starting_row)
  {
