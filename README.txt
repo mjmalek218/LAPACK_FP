@@ -61,7 +61,11 @@ DESIGN CHOICES:
 	  intended for personal usage so not too much of a problem. 
 	  Also it requires more memory allocation for a given matrix, but in
 	  theory this is made up later because it means I don't need to initialize
-	  matrices immediately. 
+	  matrices immediately. Actually, just thought of a problem: this yields
+	  *undefined* behavior when a struct matrix is first declared, but not initialized. 
+	  So whenever a mtrix is used, it *still* needs to be initialized prior to
+	  having any sensical worth, otherwise is_initialized could be initialized to
+	  anything. 
 
        6. Not re-using "init_matrix" in the reset_matrix function. The reasoning
           behind this is quite simple: since init_matrix initializes a matrix

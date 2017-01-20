@@ -22,7 +22,7 @@
    comments. */
 
 /* Allocates necessary heap memory. actual matrix memory is garbage. */
-struct matrix* init_matrix(size_t rows, size_t cols)
+matrix* init_matrix(size_t rows, size_t cols)
 {
   /* error checking */
   if (rows == 0)
@@ -37,7 +37,7 @@ struct matrix* init_matrix(size_t rows, size_t cols)
       exit(0);
     }
 
-  struct matrix* A = malloc(sizeof(struct matrix));
+  matrix* A = malloc(sizeof(matrix));
 
   /* checks to see if the allocation worked */
   if (A == NULL)
@@ -59,18 +59,17 @@ struct matrix* init_matrix(size_t rows, size_t cols)
       exit(0);
     }  
 
-  A->is_initialized = true;
+  A->is_initialized = MAGIC;
 
   return A;
 }
 
 /* If allocated, frees both the data and the struct. */
-void free_matrix(struct matrix* A)
+void free_matrix(matrix* A)
 {
   /* If matrix is not initialized, do nothing */
   if (!A->is_initialized)
     return;
-
 
   /* first free the data */
   free(A->data);
@@ -79,8 +78,7 @@ void free_matrix(struct matrix* A)
   free(A);
 
   /* Then let future calls of free/init know it is freed */
-  A->is_initialized = false;
-
+  A->is_initialized = 0;
 }
 
 
@@ -93,13 +91,20 @@ void free_matrix(struct matrix* A)
 
    REMEMBER: free_matrix deals with un-initialized matrices automatically
 */
-void reset_matrix(struct matrix* B, size_t rows, size_t cols)
+void reset_matrix(matrix* B, size_t rows, size_t cols)
 {
   free_matrix(B);
 
   /* First need to initialize the struct *itself* prior to the
      pointer... */
-  B = malloc(sizeof(struct matrix));
+  B = malloc(sizeof(matrix));
+
+  /* Check to see if the reset operation worked */
+  if (B == NULL)
+    {
+      fprintf(stderr, "Error: reset_matrix could not allocate struct");
+      exit(0);
+    }
 
   /* We can't re-use init_matrix here unfortunately since init_matrix
    *returns* a pointer to its matrix as its output, so we would need to 
@@ -108,10 +113,17 @@ void reset_matrix(struct matrix* B, size_t rows, size_t cols)
     upon these three functions: {init_matrix, free_matrix, reset_matrix} */
   B->data = (fp*) malloc(rows * cols * sizeof(fp)); 
 
-  B->rows = rows;
-  B->cols = cols;
+   /* Check to see if the reset operation worked */
+  if (B->data == NULL)
+    {
+      fprintf(stderr, "Error: reset_matrix could not allocate data");
+      exit(0);
+    }
 
-  B->is_initialized = true;
+  set_rows(B, rows);
+  set_cols(B, cols);
+
+  B->is_initialized = MAGIC;
 }
 
 /* performs a deep copy of the given matrix and stores it in the input data structure.
@@ -119,7 +131,7 @@ void reset_matrix(struct matrix* B, size_t rows, size_t cols)
    WARNING: This function will clear any existing memory/dimensionality of B if
             if it exists.
  */
-void deep_copy(const struct matrix* A, struct matrix* B)
+void deep_copy(const matrix* A, matrix* B)
 {
   is_valid(A);
   
@@ -139,19 +151,19 @@ void deep_copy(const struct matrix* A, struct matrix* B)
 /* Given two matrices in the order A and then B, checks to see if AB makes sense.
    Since this is a check function...code is so small makes sense to make it
    inline. */
-bool are_conformable(const struct matrix* A, const struct matrix* B)
+inline bool are_conformable(const matrix* A, const matrix* B)
 {
   return (get_cols(A) == get_rows(B));
 } 
 
 /* for addition or subtraction...or a host of other purposes */
-inline bool same_dim(const struct matrix* A, const struct matrix* B)
+inline bool same_dim(const matrix* A, const matrix* B)
 {
   return (A->cols == B->cols && A->rows == B->rows);
 }
 
 /* naive implementation. When B is passed in, it is cleared.*/
-void naive_transpose(const struct matrix* A, struct matrix* B)
+void naive_transpose(const matrix* A, matrix* B)
 {
   is_valid(A);
   reset_matrix(B, get_rows(A), get_cols(A));
@@ -171,7 +183,7 @@ void naive_transpose(const struct matrix* A, struct matrix* B)
 
 /* Returns the sum of two matrices. Notice the sensitivity to row-major
    ordering of the matrix in main memory/caches */
-void add_mats(const struct matrix* A, const struct matrix* B, struct matrix* sum)
+void add_mats(const matrix* A, const matrix* B, matrix* sum)
 {
 
   /* First *need* to check to see if A and B are of same dim...
@@ -211,7 +223,7 @@ void add_mats(const struct matrix* A, const struct matrix* B, struct matrix* sum
 }
 
 /* returns AB via O(n^3) naive matrix multiplication time */
-void naive_mat_mult(const struct matrix* A, const struct matrix* B, struct matrix* product)
+void naive_mat_mult(const matrix* A, const matrix* B, matrix* product)
 {
   /* valid input error checking */
   is_valid(A);
@@ -247,7 +259,7 @@ void naive_mat_mult(const struct matrix* A, const struct matrix* B, struct matri
 }
 
 /* Given two matrices A and B , returns their row-wise concatenation A|B */
-void row_concat(const struct matrix* A, const struct matrix* B, struct matrix* result)
+void row_concat(const matrix* A, const matrix* B, matrix* result)
 {
   is_valid(A);
   is_valid(B);
@@ -285,7 +297,7 @@ void row_concat(const struct matrix* A, const struct matrix* B, struct matrix* r
    WARNING: This actually ALTERS the input, there's no additional 
    pointer reference passed in 
  */
-inline void row_mult(struct matrix* inp, size_t i, fp s)
+inline void row_mult(matrix* inp, size_t i, fp s)
 {
   is_valid(inp);
 
@@ -309,7 +321,7 @@ inline void row_mult(struct matrix* inp, size_t i, fp s)
    WARNING: This actually ALTERS the input, there's no additional 
    pointer reference passed in 
 */
-inline void row_add_mult(struct matrix* inp, size_t i, size_t j, fp s)
+inline void row_add_mult(matrix* inp, size_t i, size_t j, fp s)
 {
   is_valid(inp);
 
@@ -333,7 +345,7 @@ inline void row_add_mult(struct matrix* inp, size_t i, size_t j, fp s)
    WARNING: This actually ALTERS the input, there's no additional 
    pointer reference passed in 
 */
-inline void switch_row(struct matrix* inp, size_t i, size_t j)
+inline void switch_row(matrix* inp, size_t i, size_t j)
 {
   if (i >= inp->rows || j >= inp->rows)
     {
@@ -361,7 +373,7 @@ inline void switch_row(struct matrix* inp, size_t i, size_t j)
    Not sure if this is really efficient...need to understand this better
 */
 inline size_t 
-locate_nonzero_col(const struct matrix* inp, size_t col, size_t starting_row)
+locate_nonzero_col(const matrix* inp, size_t col, size_t starting_row)
  {
 
    is_valid(inp);
@@ -380,20 +392,20 @@ locate_nonzero_col(const struct matrix* inp, size_t col, size_t starting_row)
  }
 
 /* Given a matrix, returns its reduced row-echelon form using gauss-jordan elimination */
-struct matrix Gauss_Jordan_Reduce(struct matrix mat);
+matrix Gauss_Jordan_Reduce(matrix mat);
 
 /* Given a matrix, returns its rank */
-int rank(struct matrix mat);
+int rank(matrix mat);
 
 /* Given a matrix, returns solutions to the corresponding homogenous system. */
-struct matrix solve_homog(struct matrix mat);
+matrix solve_homog(matrix mat);
 
 /* Given a matrix M and an appropriate vector b (encoded as a matrix), returns the solution 
    to Mx = b using a rudimentary method.  */
-struct matrix basic_solve(struct matrix M, struct matrix b);
+matrix basic_solve(matrix M, matrix b);
 
 /* Computes the determinant of M */
-fp det(struct matrix M);
+fp det(matrix M);
 
 /* The following implementations are optimized for the target machine:  */
 
@@ -405,7 +417,7 @@ fp det(struct matrix M);
    -- There are four cores total, so we limit the computation to 4 threads maximum
 
  */
-void transpose_i7(const struct matrix* A, struct matrix* B)
+void transpose_i7(const matrix* A, matrix* B)
 {
   /* error input checking. Need to make sure A and B are the correct sizes. */
   is_valid(A);
@@ -475,7 +487,7 @@ void transpose_i7(const struct matrix* A, struct matrix* B)
 
 /* Multiplies two matrices together using the Strassen algorithm.
    Optimized for the x1 carbon machine */
-void strass_mat_mult_i7(struct matrix* result, const struct matrix* A, const struct matrix* B)
+void strass_mat_mult_i7(matrix* result, const matrix* A, const matrix* B)
 {
  
   
