@@ -27,13 +27,13 @@ matrix* init_matrix(size_t rows, size_t cols)
   /* error checking */
   if (rows == 0)
     {
-      fprintf(stderr, "Error: invalid number of rows");
+      fprintf(stderr, "Error: invalid number of rows\n");
       exit(0);
     }
   
   else if (cols == 0)
     {
-      fprintf(stderr, "Error: invalid number of cols");
+      fprintf(stderr, "Error: invalid number of cols\n");
       exit(0);
     }
 
@@ -42,7 +42,7 @@ matrix* init_matrix(size_t rows, size_t cols)
   /* checks to see if the allocation worked */
   if (A == NULL)
     {
-      fprintf(stderr, "Error: struct could not be allocated.");
+      fprintf(stderr, "Error: struct could not be allocated.\n");
       exit(0);
     } 
 
@@ -55,7 +55,7 @@ matrix* init_matrix(size_t rows, size_t cols)
   /* again...need to check to see if the allocation worked */
   if (A->data == NULL)
     {
-      fprintf(stderr, "Error: data array could not be allocated.");
+      fprintf(stderr, "Error: data array could not be allocated.\n");
       exit(0);
     }  
 
@@ -102,7 +102,7 @@ void reset_matrix(matrix* B, size_t rows, size_t cols)
   /* Check to see if the reset operation worked */
   if (B == NULL)
     {
-      fprintf(stderr, "Error: reset_matrix could not allocate struct");
+      fprintf(stderr, "Error: reset_matrix could not allocate struct\n");
       exit(0);
     }
 
@@ -116,7 +116,7 @@ void reset_matrix(matrix* B, size_t rows, size_t cols)
    /* Check to see if the reset operation worked */
   if (B->data == NULL)
     {
-      fprintf(stderr, "Error: reset_matrix could not allocate data");
+      fprintf(stderr, "Error: reset_matrix could not allocate data\n");
       exit(0);
     }
 
@@ -231,7 +231,7 @@ void naive_mat_mult(const matrix* A, const matrix* B, matrix* product)
 
   if (!are_conformable(A,B))
     {
-      fprintf(stderr, "Error: matrices to multiply are NOT comformable");
+      fprintf(stderr, "Error: matrices to multiply are NOT comformable\n");
       exit(0);
     }
   /* end error checking */

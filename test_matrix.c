@@ -23,9 +23,9 @@ void print_matrix(const matrix* A)
 
   for (i = 1; i <= get_rows(A); i++)
     {
-      for (j = 0; j <= get_cols(A); j++)
+      for (j = 1; j <= get_cols(A); j++)
 	{
-	  printf("%10.2f ", (float)get_elem(A, i, j));
+	  printf("%10.2f ", (float) get_elem(A, i, j));
 	}
       printf("\n");
     }
@@ -38,16 +38,17 @@ void print_matrix(const matrix* A)
    accessor functions.  */
 bool test__basics_matrix()
 {
-  printf("First we go through exactly three '0' edge case initializations. "
+  int i,j;
+
+  /*printf("First we go through exactly three '0' edge case initializations. "
 	 "These should all print errors\n");
   matrix* test_mat = init_matrix(0, 0);
 
   test_mat = init_matrix(3, 0);
   test_mat = init_matrix(0, 4);
   
-  /* This should return an error  */
 
-  printf("Now we attempt to print the matrices. Again this should print"
+  printf("Now we attempt to print the matrices. Again this should print "
          "an error.\n");
   print_matrix(test_mat);
 
@@ -59,16 +60,16 @@ bool test__basics_matrix()
   printf("Now we attempt legitimate allocations. First free the memory.\n");
 
   free_matrix(test_mat);
-
+*/
   printf("Now we initialize the same matrix to be 6x7. Print immediately "
          "to see what garbage values it takes on\n");
 
-  test_mat = init_matrix(6, 7);
+  matrix* test_mat = init_matrix(6, 7);
 
   print_matrix(test_mat);
 
-  printf("The accessors for rows columns return: \n rows = %d \n cols = \n. These"
-	 " should be 6 and 7, respectively", 
+  printf("The accessors for rows columns return: \n rows = %zd \n cols = %zd.\nThese"
+	 " should be 6 and 7, respectively\n", 
 	 get_rows(test_mat), get_cols(test_mat));
 
   printf("Now we cycle through the matrix and attempt to set each "
@@ -82,19 +83,19 @@ bool test__basics_matrix()
 	}
     }
 
-  printf("We cycle through the matrix again and, rather than using set_elem"
 
-  printf("Reset the matrix handle to a 2x5 matrix using the reset_matrix() function, "
-         " and test to see if the result is valid. is_valid() "
-         " should not output anything.\n");
+  print_matrix(test_mat);
 
-  reset_matrix(test_matrix, 2, 5);
+  printf("Finally reset the matrix handle to a 2x5 matrix using the reset_matrix() function, "
+         "and test to see if the result is valid. is_valid() "
+         "should not output anything. We print the resulting matrix, which should yield "
+         "aribitrary values\n");
+
+  reset_matrix(test_mat, 2, 5);
 
   is_valid(test_mat);
 
-  
-
-  printf(
+  print_matrix(test_mat);
 
 }
 
@@ -173,9 +174,6 @@ bool test__naive_transpose()
 }  
 
 
-/* test addition */
-bool test__
-
 /* test multiplication */
 
 
@@ -193,12 +191,11 @@ int main()
 
   printf("\n\nBEGIN TESTING INIT, FREE, RESET, AND IS_VALID\n\n");
 
-  if (!test__basics_matrix())
-    printf("\ninit_matrix() failed.\n"); 
+  test__basics_matrix();
 
   printf("\n\nEND TESTING INIT, FREE, RESET, AND IS_VALID\n\n");
 
-
+  /*
   printf("\n\nBEGIN TESTING init_matrix()\n\n");
 
   if(!test__accessors())
@@ -231,7 +228,7 @@ int main()
   test__row_add_mult();
 
   test__switch_row();
-
+  */
   
 }
 
