@@ -115,6 +115,29 @@ inline void set_cols(matrix* A, size_t new_cols)
   A->cols = new_cols;
 }
 
+/* print a matrix to the console */
+void print_matrix(const matrix* A)
+{
+  is_valid(A);
+
+  int i,j;
+
+  printf("\n\n");
+
+  for (i = 1; i <= get_rows(A); i++)
+    {
+      for (j = 1; j <= get_cols(A); j++)
+	{
+	  printf("%10.2f ", (float) get_elem(A, i, j));
+	}
+      printf("\n");
+    }
+
+  printf("\n\n");  
+  
+}
+
+
 
 /* Functions to be defined... */
 

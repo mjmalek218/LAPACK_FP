@@ -12,28 +12,6 @@
 /* This is the maximum size of a single dimension for our test matrices */
 #define MAX_LENGTH 10
 
-/* print a matrix to the console */
-void print_matrix(const matrix* A)
-{
-  is_valid(A);
-
-  int i,j;
-
-  printf("\n\n");
-
-  for (i = 1; i <= get_rows(A); i++)
-    {
-      for (j = 1; j <= get_cols(A); j++)
-	{
-	  printf("%10.2f ", (float) get_elem(A, i, j));
-	}
-      printf("\n");
-    }
-
-  printf("\n\n");  
-  
-}
-
 /* This tests all basic memory allocation functions, as well as
    accessor functions.  */
 bool test__basics_matrix()
