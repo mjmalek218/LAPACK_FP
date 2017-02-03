@@ -490,7 +490,7 @@ void transpose_i7(const matrix* A, matrix* B)
 void strass_mat_mult_i7(matrix* result, const matrix* A, const matrix* B)
 {
  
-  
+  // TODO
 }
 
 /* on going issues with C:

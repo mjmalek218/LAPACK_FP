@@ -18,7 +18,7 @@ bool test__basics_matrix()
 {
   int i,j;
 
-  /*printf("First we go through exactly three '0' edge case initializations. "
+  /* printf("First we go through exactly three '0' edge case initializations. "
 	 "These should all print errors\n");
   matrix* test_mat = init_matrix(0, 0);
 
@@ -52,12 +52,13 @@ bool test__basics_matrix()
 
   printf("Now we cycle through the matrix and attempt to set each "
           "value to successive natural numbers, printed in row-major order:\n");
-  
+ 
+
   for (i = 1; i <= get_rows(test_mat); i++)
     {
       for (j = 1; j <= get_cols(test_mat); j++)
 	{
-	  set_elem(test_mat, i, j, (i - 1) * get_rows(test_mat) + j);
+	  set_elem(test_mat, i, j, (i - 1) * get_cols(test_mat) + j);
 	}
     }
 
@@ -167,24 +168,24 @@ int main()
 
   */
 
+  /* 
+
   printf("\n\nBEGIN TESTING INIT, FREE, RESET, AND IS_VALID\n\n");
 
   test__basics_matrix();
 
   printf("\n\nEND TESTING INIT, FREE, RESET, AND IS_VALID\n\n");
 
-  /*
-  printf("\n\nBEGIN TESTING init_matrix()\n\n");
+  */
 
-  if(!test__accessors())
-    print("One of the basic accessor functions failed");
+  /*
   
-  printf("\n\nBEGIN TESTING init_matrix()\n\n");
+  printf("\n\nBEGIN TESTING deep_copy()\n\n");
   
   if (!test__deep_copy())
     printf("deep_copy() failed.");
   
-  printf("\n\nBEGIN TESTING init_matrix()\n\n");
+  printf("\n\nEND TESTING deep_copy()\n\n");
   
   if (!test__are_conformable())
     printf("are_conformable() failed.");
