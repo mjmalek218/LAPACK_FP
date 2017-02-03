@@ -145,7 +145,7 @@ void print_matrix(const matrix* A)
          as opposed to having the functions return it. Discussion in
          Design Doc. */
 matrix* init_matrix(size_t rows, size_t cols);
-void deep_copy(const matrix*, matrix*);
+void deep_copy(const matrix*, matrix**);
 void free_matrix(matrix* A);
 void reset_matrix(matrix* B, size_t rows, size_t cols);
 

@@ -18,7 +18,10 @@ bool test__basics_matrix()
 {
   int i,j;
 
-  /* printf("First we go through exactly three '0' edge case initializations. "
+  /*
+    ALREADY WENT THROUGH AND TESTED THESE: KEEP AS COMMENTED THOUGH
+
+  printf("First we go through exactly three '0' edge case initializations. "
 	 "These should all print errors\n");
   matrix* test_mat = init_matrix(0, 0);
 
@@ -37,8 +40,9 @@ bool test__basics_matrix()
 
   printf("Now we attempt legitimate allocations. First free the memory.\n");
 
-  free_matrix(test_mat);
-*/
+  free_matrix(test_mat); */
+
+
   printf("Now we initialize the same matrix to be 6x7. Print immediately "
          "to see what garbage values it takes on\n");
 
@@ -65,7 +69,16 @@ bool test__basics_matrix()
 
   print_matrix(test_mat);
 
-  printf("Finally reset the matrix handle to a 2x5 matrix using the reset_matrix() function, "
+  printf("Now perform a deep copy of the previous matrix and print. Should "
+          "be exactly the same output as before\n");
+
+  matrix* test_mat_2;
+
+  deep_copy(test_mat, &test_mat_2);
+
+  print_matrix(test_mat_2);
+
+  printf("Reset the matrix handle to a 2x5 matrix using the reset_matrix() function, "
          "and test to see if the result is valid. is_valid() "
          "should not output anything. We print the resulting matrix, which should yield "
          "aribitrary values\n");
@@ -76,7 +89,18 @@ bool test__basics_matrix()
 
   print_matrix(test_mat);
 
+  printf("Finally, we perform a deep copy of the previous matrix and print "
+          "before freeing.\n");
+
+
+  deep_copy(test_mat, &test_mat_2);
+
+  print_matrix(test_mat_2);
+
+  free_matrix(test_mat);
+  free_matrix(test_mat_2);
 }
+
 
 /* returns true if test is valid: false otherwise */
 bool test__naive_transpose()
@@ -167,16 +191,13 @@ int main()
      via the true/false output of the function  
 
   */
+ 
 
-  /* 
-
-  printf("\n\nBEGIN TESTING INIT, FREE, RESET, AND IS_VALID\n\n");
+  printf("\n\nBEGIN TESTING INIT, FREE, RESET, IS_VALID, AND DEEP_COPY\n\n");
 
   test__basics_matrix();
 
-  printf("\n\nEND TESTING INIT, FREE, RESET, AND IS_VALID\n\n");
-
-  */
+  printf("\n\nEND TESTING INIT, FREE, RESET, IS_VALID, AND DEEP_COPY\n\n");
 
   /*
   

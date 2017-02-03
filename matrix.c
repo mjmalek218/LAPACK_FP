@@ -68,7 +68,7 @@ matrix* init_matrix(size_t rows, size_t cols)
 void free_matrix(matrix* A)
 {
   /* If matrix is not initialized, do nothing */
-  if (!A->is_initialized)
+  if (A->is_initialized != MAGIC)
     return;
 
   /* first free the data */
@@ -90,21 +90,23 @@ void free_matrix(matrix* A)
    now we simply re-allocate completely.  
 
    REMEMBER: free_matrix deals with un-initialized matrices automatically
-*/
+
+   BEHAVIOR *UNDEFINED* ON UNITIALIZED MATRICES. DO NOT USE RESET ON MATRICES
+   THAT HAVE NOT BEEN INITIALIZED */
 void reset_matrix(matrix* B, size_t rows, size_t cols)
 {
-  free_matrix(B);
+  /* Because we need to re-allocate only the data matrix,
+     but *keep* the struct pointer, we need to do our own 
+     specific freeing of the matrix here...*/
 
-  /* First need to initialize the struct *itself* prior to the
-     pointer... */
-  B = malloc(sizeof(matrix));
-
-  /* Check to see if the reset operation worked */
-  if (B == NULL)
+   /* Check to see if we've been fed an unitialized matrix */
+  if (B->is_initialized != MAGIC)
     {
-      fprintf(stderr, "Error: reset_matrix could not allocate struct\n");
+      fprintf(stderr, "Error: reset matrix was given an unitialized matrix\n");
       exit(0);
     }
+
+  free(B->data);
 
   /* We can't re-use init_matrix here unfortunately since init_matrix
    *returns* a pointer to its matrix as its output, so we would need to 
@@ -130,20 +132,33 @@ void reset_matrix(matrix* B, size_t rows, size_t cols)
 
    WARNING: This function will clear any existing memory/dimensionality of B if
             if it exists.
+
+   The better way for this to work tbh is to pass in a pointer to the matrix
+   we want to modify: otherwise we won't be able to alter pointers themselves
+   effectively 
  */
-void deep_copy(const matrix* A, matrix* B)
+void deep_copy(const matrix* A, matrix** B)
 {
   is_valid(A);
   
   size_t i,j;
 
-  reset_matrix(B, get_rows(A), get_cols(A));
-
-  for(i = 1; i <= get_rows(B); i++)
+  if ((*B)->is_initialized == MAGIC)
     {
-      for(j = 1; j <= get_cols(B); j++)
+      reset_matrix(*B, get_rows(A), get_cols(A));
+    }
+
+  else 
+    {
+      *B = init_matrix(get_rows(A), get_cols(A)); 
+    }
+    
+
+  for(i = 1; i <= get_rows(*B); i++)
+    {
+      for(j = 1; j <= get_cols(*B); j++)
 	{
-	  set_elem(B, i, j, get_elem(A, i, j));
+	  set_elem(*B, i, j, get_elem(A, i, j));
 	}
     } 
 }
@@ -391,18 +406,9 @@ locate_nonzero_col(const matrix* inp, size_t col, size_t starting_row)
    return -1;
  }
 
-/* Given a matrix, returns its reduced row-echelon form using gauss-jordan elimination */
-matrix Gauss_Jordan_Reduce(matrix mat);
 
 /* Given a matrix, returns its rank */
 int rank(matrix mat);
-
-/* Given a matrix, returns solutions to the corresponding homogenous system. */
-matrix solve_homog(matrix mat);
-
-/* Given a matrix M and an appropriate vector b (encoded as a matrix), returns the solution 
-   to Mx = b using a rudimentary method.  */
-matrix basic_solve(matrix M, matrix b);
 
 /* Computes the determinant of M */
 fp det(matrix M);
