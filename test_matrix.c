@@ -13,8 +13,8 @@
 #define MAX_LENGTH 10
 
 /* This tests all basic memory allocation functions, as well as
-   accessor functions.  */
-bool test__basics_matrix()
+   accessor functions. Just eye-ball tests should be sufficient  */
+voiud test__basics_matrix()
 {
   int i,j;
 
@@ -99,72 +99,58 @@ bool test__basics_matrix()
 
   free_matrix(test_mat);
   free_matrix(test_mat_2);
+
+  return true;
 }
 
-
-/* returns true if test is valid: false otherwise */
-bool test__naive_transpose()
+/* tests naive transpose, optimized transpose (for core i7 cache) and
+   addition functions. Again as for all these functions eye-ball
+   tests should be sufficient  */
+bool test__trans_add()
 {
-  /* seed random */
-  //  srand(time(NULL));
-
   size_t rows = 5;
-  size_t cols = 5;
-  int i,j = 0; //iterators
+  size_t cols = 3;
+  int i,j; //iterators
 
-  /* first test matrix of all zeros and see if it still zeros */
+  printf("First initialize a matrix to garbage values, and print. "
+          "There should be 5 rows and 3 columns.\n");
   matrix* Z = init_matrix(rows, cols);
-
-  matrix* dummy_mat; 
+  
   print_matrix(Z);
 
-  // DELETE DELETE
-  printf("\ntest\n");
-  fflush(stdout);   
-  // DELETE DELETE
+  printf("Now compute the result of the transpose (in place) "
+          "and print it.\n");
 
-
-  /* Now compute the result of the transpose */
-  naive_transpose(Z, dummy_mat);   
+  naive_transpose(Z, Z);   
 
   print_matrix(Z);
-  print_matrix(dummy_mat);
 
-  for (i = 1; i <= cols; i++)
+  printf("Now reset the original matrix to a 2x3, "
+          "set all the elements to row-wise successive natural "
+          "numbers, and print. \n");
+
+  reset_matrix(Z, 2, 3);
+
+  for (i = 1; i <= get_rows(Z); i++)
     {
-      for (j = 1; j <= rows; j++)
+      for (j = 1; j <= get_cols(Z); j++)
 	{
-	  if (get_elem(Z, i, j) != 0)
-	    return false;
+	  set_elem(Z, i, j, (i - 1) * get_cols(Z) + j);
 	}
     }
 
-  /* Now create a matrix full of random integers to test */
-  matrix* R = init_matrix(rows, cols);
+  print_matrix(Z);
   
-  for (i = 1; i <= rows; i++)
-    {
-      for (j = 1; j <= cols; j++)
-	{
-	  set_elem(R, i, j, (fp) (rand() % MAX_LENGTH));
-	}
-    }
-
-  naive_transpose(R, dummy_mat); 
+  naive_transpose(Z, Z); 
   
-  for (i = 1; i <= cols; i++)
-    {
-      for (j = 1; j <= rows; j++)
-	{
-	  if (get_elem(dummy_mat, i, j) != get_elem(R, j, i))
-	    return false;
-	}
-    }
+  printf("Now print the transpose of this matrix with naive_transpose.\n");
 
+  print_matrix(Z);
 
+  printf("Finally test a 1x1 matrix as an edge case. First "
+         "reset the previous matrix to {1} and print");
 
-  /* finally test a 1x1 matrix */
-  matrix* ONE = init_matrix(1, 1);
+  m = init_matrix(1, 1);
   naive_transpose(ONE, dummy_mat);
 
   print_matrix(dummy_mat);
@@ -177,7 +163,14 @@ bool test__naive_transpose()
 }  
 
 
-/* test multiplication */
+/* test multiplication/supporting functions */
+bool test__mult()
+{
+
+
+  return true;
+
+}
 
 
 /* write tests for *every* single function  */
@@ -199,37 +192,15 @@ int main()
 
   printf("\n\nEND TESTING INIT, FREE, RESET, IS_VALID, AND DEEP_COPY\n\n");
 
-  /*
-  
-  printf("\n\nBEGIN TESTING deep_copy()\n\n");
-  
-  if (!test__deep_copy())
-    printf("deep_copy() failed.");
-  
-  printf("\n\nEND TESTING deep_copy()\n\n");
-  
-  if (!test__are_conformable())
-    printf("are_conformable() failed.");
-  
-  if (!test__naive_transpose())
-    printf("naive_tranpose() failed.");
 
-  if (!test__add_mats())
-    printf("add_mats() failed.");
+  printf("\n\nBEGIN TESTING TRANSPOSE AND ADD\n\n");
 
-  if (!test__same_dim())
-    naive_transpose();
+  test__trans_add();
 
-  if (!test__
-  test__add_mats();
+  printf("\n\nEND TESTING TRANSPOSE AND ADD\n\n");
 
-  test__row_mult();
-
-  test__row_add_mult();
-
-  test__switch_row();
-  */
   
+
 }
 
 
