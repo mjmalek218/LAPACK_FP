@@ -30,7 +30,9 @@ D SADASDSADSADSADSADSADSADSADASDASDASDASD */
             implementation. The C compiler could very well implement logical shifting:
             nothing is required by any standard 
 
- */ 
+ */
+
+/*  NEED TO ALSO IMPLEMENT COMPLEX FIXED POINT */ 
 
 #include <inttypes.h>
 
@@ -38,8 +40,18 @@ D SADASDSADSADSADSADSADSADSADASDASDASDASD */
    fractional bits.  */
 #define FRAC_P 14
 
-/* note we use signed here. */
+/* note we use signed here. 
+
+
+   THINK: I want to be able to effortlessly convert between 64 bit fixed point
+   and 32 bit. I need to determine how exactly to do this, but I want it to
+   simply involve changing a line in the macro-definition top of the file
+*/
 typedef int32_t fp;
+
+/* Also define complex numbers, which are just pointers to an array of size 2.
+   Not really a magic number as */
+typedef fp complex_fp[2];
 
 inline min(fp x, fp y)
 {
@@ -62,6 +74,13 @@ inline fp div_fp(fp, fp);
 inline fp int_to_fp(int32_t n)
 {
   return n << FRAC_P;
+}
+
+/* Most convenient way to do this is probably to perform the  */
+inline fp int_to_complex_fp(int32_t real, int32_t imag)
+{
+
+
 }
 
 /* This attempts to maximize precision by rounding to the nearest, at
@@ -96,3 +115,71 @@ inline fp div_fp(fp x, fp y)
 }
 
 
+inline factorial(size_t n)
+{
+  size_t product = 1;
+  
+  while (n > 0)
+    {
+      product *= n 
+      n--;
+    }
+
+  return product;
+}
+
+
+/* The following functions we implement via Taylor Polynomial approxinations, for
+   now. This involves computing a bound on our error value/remainder */
+
+/* This will compute exponents using fixed point arithmetic to the desired precision. 
+   Remember that fp is a 32 bit representation. For right now we only implement
+   with natural base, but the extension should be simple (need to examine its
+   numerical stability). */
+fp exp_fp()
+{
+
+  /* Pre-compute the max/min values for every  */
+  MAX_Q = ;
+
+  /* easy...just set this to 0 because it basically is */
+  MIN_Q = 0;
+
+
+
+
+}
+
+complex_fp exp_complex_fp()
+{
+
+
+}
+
+/* Again for now we only have the natural base as an implementation */
+fp log_fp()
+{
+
+}
+
+complex_fp log_complex_fp()
+{
+
+
+}
+
+
+/* */
+fp sin_fp()
+{
+
+}
+
+
+complex_fp sin_complex_fp()
+{
+
+}
+
+
+//...need to do cos too

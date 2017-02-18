@@ -4,6 +4,9 @@
 
    -- Implement error checking with set jumps and long jumps
 
+   -- BUT for the above...tbh there is not much that can
+      be done, in fact they don't 
+
    -- Need to read chapter 5 and apply all basic optimizations
 
    -- implement parallelized routines. This is critical for matrix computations.  
