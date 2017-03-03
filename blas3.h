@@ -18,22 +18,35 @@
 
    Computes C = alpha * A * B and related operations. 
 
-Argument breakdown:
+As a side note for what is about to come, it's interesting how they capitalize
+the name of arguments in the comments b
+
+Parameters:
+
+   Input, char TRANSA
+
+
+"char transa":
+
+"char transb":
+
+"int m":
+
+"int n":
+
+"int k":
+
+"double alpha":
+
+"double a[]":
+
+"int 
 
    
 */
 void dgemm ( char transa, char transb, int m, int n, int k, 
   double alpha, double a[], int lda, double b[], int ldb, double beta, 
   double c[], int ldc );
-
-/* Explanation of all the parameters here:
-
-   char transa: basically determines whether or not 'a' is transposed in the operation
-
-   
-   
-*/
-
 
 
 

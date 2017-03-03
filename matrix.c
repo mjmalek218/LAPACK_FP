@@ -24,6 +24,9 @@
    be implemented using fast algorithms. The runtimes for each will be listed in the 
    comments. */
 
+/* We're going to design this file as a wrapper for basic routines, more or less, 
+   around fgemm. More complex factorizations will be performed in other files. */
+
 /* Allocates necessary heap memory. actual matrix memory is garbage. */
 matrix* init_matrix(size_t rows, size_t cols)
 {
@@ -165,6 +168,27 @@ void deep_copy(const matrix* A, matrix** B)
 	}
     } 
 }
+
+/* I've realized that I need ways to select sub-sections of matrices...
+   for example the Strassen algorithm necessitates this unless I want
+   to re-write the functionality every time. For now...I will only
+   allow for congruent selection, but in the future it might not be
+   a bad idea to offer greater variability here (i.e. an array of rows/columns
+   to select, etc... See MATLAB for ideas here) */
+
+/* Looks like we need to use the same trickery as for deep copy. That is, 
+   in order to allow "block" to be cleared or not cleared, we need a way 
+   of checking to see if it c*/
+void select_block(matrix *A, matrix *block, r1, r2, c1, c2)
+{
+  is_valid(A);
+
+  /* Do quick error checking on all of the */
+
+
+
+}
+
 
 /* Given two matrices in the order A and then B, checks to see if AB makes sense.
    Since this is a check function...code is so small makes sense to make it
@@ -410,7 +434,8 @@ locate_nonzero_col(const matrix* inp, size_t col, size_t starting_row)
  }
 
 
-/* Given a matrix, returns its rank */
+/* Given a matrix, returns its rank. This should go in another file to be honest. 
+   Computing rank is a more complex operation. */
 int rank(matrix mat);
 
 /* Computes the determinant of M */
@@ -418,81 +443,15 @@ fp det(matrix M);
 
 /* The following implementations are optimized for the target machine:  */
 
-/* Multi-threaded optimized transpose routine.
-
-   -- Inner most caches of core i7 is 32 kB. With this in mind, we operate upon 
-      16 kB of source matrix and 16 kB of the destination matrix at once
-
-   -- There are four cores total, so we limit the computation to 4 threads maximum
+/*
+  This will be just a general transpose routine built upon the blas3.c functionality.
+  We allow the option for corei7 optimize transposition or simply naive transposition.
+  This optionality should permit testing between the different optimizations 
 
  */
-void transpose_i7(const matrix* A, matrix* B)
+void transpose(const matrix* A, matrix* B)
 {
-  /* error input checking. Need to make sure A and B are the correct sizes. */
-  is_valid(A);
-
-  size_t s_rows = get_rows(A);
-  size_t s_cols = get_cols(A);
-  size_t net_size = s_rows * s_cols;
-
-  /* s and d are the indices for which "block" we are in for the source
-     and destination matrices in the iteration */
-  size_t s;
-  size_t d;
-
-  
-  size_t i;
-  size_t j;
-
-  size_t min_s;
-  size_t min_d;
-
-  /* For each element i in the source matrix, we can reverse engineer the 
-     corresponding row and col in the destination matrix. These variables
-     will hold the results of this reverse engineering on each iteration. */
-  size_t dest_row;
-  size_t dest_col;
-   
-  /* We create this array then operate on it independently of 
-     the accessor functions. We need to do this to optimize 
-     Cache memory. This is one of the few instances in which 
-     we ignore the safety measures, but in general
-     attempt to avoid it. */
-  reset_matrix(B, s_cols, s_rows);
-  const fp* source = A->data;
-  
-  /* Loop over blocks for source array */
-  for (s = 1; s <= net_size; s += (L1D_SIZE/2))
-    {
-      min_s = min(net_size, s + L1D_SIZE/2);
-
-      /* Loop over blocks for destination array */
-      for (d = 1; d <= net_size; d+= (L1D_SIZE/2))
-	{
-	  min_d = min(net_size, d + L1D_SIZE/2);
-
-	  for (i = s; i <= min_s; i++)
-	    {
-	      dest_col = i / s_cols + 1;
-	      dest_row = (i-1) % s_cols +1;
-
-	      /* Since we are iterating over blocks we *do* need
-	         to compute the absolute index j inside the d 
-	         range. */
-	      j = dest_col + (dest_row-1) * s_rows;
-
-	      /* We make sure to limit our editing to the data that is
-	         already cached, attempting to minimize thrashing. */
-	      if (j <= min_d)
-		{
-		  set_elem(B, dest_row, dest_col, get_elem(A, dest_col, dest_row));
-		}
-
-	    }
-	}
-    }
 }
-
 
 /* Multiplies two matrices together using the Strassen algorithm.
    Optimized for the x1 carbon machine */
